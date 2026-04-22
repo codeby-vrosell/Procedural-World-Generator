@@ -10,6 +10,12 @@ This repository contains the custom C# scripts developed for the **Procedural Ge
 
 While the main system resides in Project IV, this repository focuses specifically on a **real-time application** of the generator, allowing for the isolated and optimized visualization and dynamic adjustment of biomes, entities, and terrain parameters.
 
+## Scope & Limitations
+
+While the application allows for the deep customization of a vast array of generation parameters in real-time, it is important to note that it remains fundamentally tied to the external project it was built for. 
+
+Because it inherits Project IV's unique rules—such as being strictly grid-based and featuring exactly 5 specific biomes—**the app does not allow for adding or fundamentally altering the base types of biomes, enemies, entities, or generated objects.** The tool is designed to tweak and visualize *how* these predefined elements are generated and distributed, rather than creating entirely new ones from scratch.
+
 ## Important Disclaimer
 
 This repository does **NOT** contain the complete Unity project.  
@@ -53,7 +59,7 @@ The following screenshots display the procedural generator in action:
 
 You can watch the tool in action here:
 
-- **Youtube:** [Procedural Generator Showcase](https://www.youtube.com/watch?v=YOUR_VIDEO_LINK_HERE)
+- **Youtube:** [Procedural Generator Showcase] (Available soon)
 
 ## Play in Browser
 
@@ -73,7 +79,7 @@ You can try the tool directly from your browser using the WebGL build:
 
 ## License
 
-This repository is provided under a strict private license with all rights reserved.                                   
+This repository is provided under a strict private license with all rights reserved.                                    
 **Its use, copying, modification, or distribution is not allowed** under any circumstances without explicit written permission from the author.
 
 All rights reserved.
