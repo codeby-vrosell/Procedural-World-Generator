@@ -2,7 +2,7 @@
   <img src="IMG/banner.jpg" alt="Procedural Generator Banner" />
 </p>
 
-# PROCEDURAL WORLD GENERATOR – General Project Readme
+# PROCEDURAL WORLD GENERATOR
 
 ## Project Overview
 
