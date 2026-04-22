@@ -8,7 +8,7 @@
 
 This repository contains the custom C# scripts developed for the **Procedural Generator**. This world generator is an integral part of **[Project IV](https://your-link-to-candletales.com)**, a tactical roguelike that is part of a larger overarching project. 
 
-While the main system resides in Candletales, this repository focuses specifically on a **real-time application** of the generator, allowing for the isolated and optimized visualization and dynamic adjustment of biomes, entities, and terrain parameters.
+While the main system resides in Project IV, this repository focuses specifically on a **real-time application** of the generator, allowing for the isolated and optimized visualization and dynamic adjustment of biomes, entities, and terrain parameters.
 
 ## Important Disclaimer
 
