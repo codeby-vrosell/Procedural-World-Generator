@@ -73,7 +73,7 @@ You can try the tool directly from your browser using the WebGL build:
 
 ## License
 
-This repository is provided under a strict private license with all rights reserved.
+This repository is provided under a strict private license with all rights reserved.                                   
 **Its use, copying, modification, or distribution is not allowed** under any circumstances without explicit written permission from the author.
 
 All rights reserved.
