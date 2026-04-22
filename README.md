@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="IMG/banner.jpg" alt="Procedural Generator Banner" />
+  <img src="IMG/banner.png" alt="Procedural Generator Banner" />
 </p>
 
 # PROCEDURAL WORLD GENERATOR
