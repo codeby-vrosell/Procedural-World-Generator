@@ -6,7 +6,7 @@
 
 ## Project Overview
 
-This repository contains the custom C# scripts developed for the **Procedural Generator**. This world generator is an integral part of **[Candletales](https://tu-link-a-candletales.com)**, a tactical roguelike. 
+This repository contains the custom C# scripts developed for the **Procedural Generator**. This world generator is an integral part of **[Candletales](https://your-link-to-candletales.com)**, a tactical roguelike that is part of a larger overarching project. 
 
 While the main system resides in Candletales, this repository focuses specifically on a **real-time application** of the generator, allowing for the isolated and optimized visualization and dynamic adjustment of biomes, entities, and terrain parameters.
 
@@ -53,13 +53,13 @@ The following screenshots display the procedural generator in action:
 
 You can watch the tool in action here:
 
-- **Youtube:** [Procedural Generator Showcase](https://www.youtube.com/watch?v=TU_LINK_DE_VIDEO)
+- **Youtube:** [Procedural Generator Showcase](https://www.youtube.com/watch?v=YOUR_VIDEO_LINK_HERE)
 
-## Play / Download
+## Play in Browser
 
-The playable demo or tool build is available on the following platform:
+You can try the tool directly from your browser using the WebGL build:
 
-- **Itchio:** [Procedural Generator Page](https://tu-link.itch.io/procedural-generator)
+- **GitHub Pages:** [Play Procedural Generator](https://your-username.github.io/your-repo-name/)
 
 ## Author & Contact
 
