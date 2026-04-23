@@ -1,0 +1,3291 @@
+// ============================================================  
+// Readme of UIWorldGeneratorController  
+// ============================================================  
+
+// ============================================================  
+// Description  
+// ============================================================  
+
+// This script serves as the primary interface controller for a procedural world generator.
+// It links all UI elements (toggles, sliders, buttons, inputs) to the parameters of the internal BiomeGenerator.
+// It handles real-time visual feedback, automatic world generation upon parameter changes, and manages dynamic statistical data output for the generated world.
+
+// ============================================================  
+// Responsibilities  
+// ============================================================  
+
+// - Synchronizes values between the visual UI elements and the internal BiomeGenerator.
+// - Calculates and dynamically updates world statistics (enemy and entity counts per biome).
+// - Manages an isolated "Auto Generate" system that listens for changes in UI elements.
+// - Handles UI visual feedback, including hover states, color changes, alpha fades, and button rotation animations.
+// - Casts a ray from the mouse to read and display exact tile and biome data via a hover legend.
+// - Saves the original default state of the generator, allowing a complete "Reset to Default" action.
+
+// ============================================================  
+// End of readme  
+// ============================================================  
+
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine.EventSystems;
+
+// ============================================================
+// UI Data Structures
+// ============================================================
+
+[System.Serializable]
+public class StatRowUI {
+
+    [Tooltip("The exact name of the enemy/entity. Ex: 'Frog', 'Trader'")]
+    public string targetTileName;
+    public TMP_Text totalText;
+    public TMP_Text meadowText;
+    public TMP_Text forestText;
+    public TMP_Text mushroomFText;
+    public TMP_Text swampText;
+    public TMP_Text ancientRuinsText;
+
+    private int valTotal;
+    private int valMeadow;
+    private int valForest;
+    private int valMushroom;
+    private int valSwamp;
+    private int valRuins;
+
+    public void resetValues() {
+
+        valTotal = 0;
+        valMeadow = 0;
+        valForest = 0;
+        valMushroom = 0;
+        valSwamp = 0;
+        valRuins = 0;
+        updateText();
+
+    }
+
+    public void addValues(int total, int meadow, int forest, int mushroom, int swamp, int ruins) {
+
+        valTotal = valTotal + total;
+        valMeadow = valMeadow + meadow;
+        valForest = valForest + forest;
+        valMushroom = valMushroom + mushroom;
+        valSwamp = valSwamp + swamp;
+        valRuins = valRuins + ruins;
+        updateText();
+
+    }
+
+    public void setValues(int total, int meadow, int forest, int mushroom, int swamp, int ruins) {
+
+        valTotal = total; 
+        valMeadow = meadow; 
+        valForest = forest;
+        valMushroom = mushroom; 
+        valSwamp = swamp; 
+        valRuins = ruins;
+        updateText();
+
+    }
+
+    private void updateText() {
+
+        if (totalText != null) {
+
+            totalText.text = valTotal.ToString("D2");
+
+        }
+
+        if (meadowText != null) {
+
+            meadowText.text = valMeadow.ToString("D2");
+
+        }
+
+        if (forestText != null) {
+
+            forestText.text = valForest.ToString("D2");
+
+        }
+
+        if (mushroomFText != null) {
+
+            mushroomFText.text = valMushroom.ToString("D2");
+
+        }
+
+        if (swampText != null) {
+
+            swampText.text = valSwamp.ToString("D2");
+
+        }
+
+        if (ancientRuinsText != null) {
+
+            ancientRuinsText.text = valRuins.ToString("D2");
+
+        }
+    }
+}
+
+[System.Serializable]
+public class HyperlinkButton {
+
+    public Button button;
+    public string url;
+
+}
+
+[System.Serializable]
+public class EnemyWeightUI {
+
+    public TileType enemyTile;
+    public TMP_InputField weightInput;
+
+}
+
+[System.Serializable]
+public class BiomeUIElements {
+
+    public string targetBiomeName;
+
+    [Header("Master Biome Settings")]
+    public Button foldBiomeButton;
+    public Toggle enableBiomeToggle;
+    public GameObject biomeSettingsContainer;
+
+    [Header("Puddles")]
+    public Toggle enablePuddles;
+    public GameObject puddlesContainer;
+
+    public Slider puddleNoiseFrequency;
+    public TMP_Text puddleNoiseFrequencyText;
+
+    public Slider puddleDensityThreshold;
+    public TMP_Text puddleDensityThresholdText;
+
+    public Slider puddleScatterInfluence;
+    public TMP_Text puddleScatterInfluenceText;
+
+    [Header("Obstacles")]
+    public Toggle enableObstacles;
+    public GameObject obstaclesContainer;
+
+    public Slider obstacleNoiseFrequency;
+    public TMP_Text obstacleNoiseFrequencyText;
+
+    public Slider obstacleDensityThreshold;
+    public TMP_Text obstacleDensityThresholdText;
+
+    public Slider obstacleScatterInfluence;
+    public TMP_Text obstacleScatterInfluenceText;
+
+    [Header("Enemies")]
+    public Toggle enableEnemies;
+    public GameObject enemiesContainer;
+
+    public Slider enemyGroupFrequency;
+    public TMP_Text enemyGroupFrequencyText;
+
+}
+
+// ============================================================
+// Main Controller Class
+// ============================================================
+
+public class UIWorldGeneratorController : MonoBehaviour {
+
+    // ============================================================
+    // Core References
+    // ============================================================
+
+    [Header("Main References")]
+    public BiomeGenerator biomeGenerator;
+
+    // ============================================================
+    // Main Buttons & Interaction Settings
+    // ============================================================
+
+    [Header("Buttons")]
+    public Button generateButton;
+    public Button resetButton;
+    public Button exitButton;
+    public Button autoGenerateButton;
+
+    [Header("Main Buttons Text Hover Colors")]
+    public Color generateHoverTextColor = Color.green;
+    public Color resetHoverTextColor = Color.yellow;
+    public Color exitHoverTextColor = Color.red;
+    public Color autoGenerateActiveTextColor = new Color(1f, 0.5f, 0f);
+
+    [Header("Image Buttons (No Text)")]
+    public Button[] imageOnlyButtons;
+    public Color imageButtonHoverColor = Color.cyan;
+
+    [Header("Text Hover Buttons")]
+    public Button[] textHoverButtons;
+    public Color textButtonHoverColor = Color.cyan;
+
+    [Header("Hover Fade Images")]
+    [Tooltip("Images that will increase their alpha value when hovered over.")]
+    public Image[] hoverFadeImages;
+    [Range(0f, 1f)] public float maxHoverAlpha = 1f;
+    [Range(1f, 15f)] public float hoverFadeSpeed = 5f;
+    private Dictionary<Image, Coroutine> activeAlphaFades = new Dictionary<Image, Coroutine>();
+
+    [Header("Hyperlinks")]
+    public HyperlinkButton[] hyperlinkButtons;
+
+    // ============================================================
+    // Feedback & UI Windows
+    // ============================================================
+
+    [Header("Loading Screen")]
+    public GameObject loadingScreenPanel;
+    public Image loadingBarFill;
+    public TMP_Text loadingText;
+    [Range(0.1f, 1.5f)] public float dotAnimationSpeed = 0.4f;
+
+    private Coroutine loadingTextCoroutine;
+
+    [Header("Controls Tutorial Panel")]
+    public GameObject controlsPanel;
+    [Range(0.1f, 5f)] public float pulseSpeed = 2f;
+    [Range(0f, 1f)] public float minPulseOpacity = 0.2f;
+    [Range(0f, 1f)] public float maxPulseOpacity = 1f;
+
+    private bool hasShownControls = false;
+    private bool isControlsActive = false;
+    private Coroutine pulseCoroutine;
+    private CanvasGroup controlsCanvasGroup;
+
+    [Header("Hover Legend")]
+    [Tooltip("Text displaying tile information (Class | Type | Biome | Coords)")]
+    public TMP_Text hoverLegendText;
+
+    // ============================================================
+    // UI Fold Containers & Data Tables
+    // ============================================================
+
+    [Header("Master Categories")]
+    public Button foldGeneralSettingsButton;
+    public GameObject generalSettingsFoldContainer;
+
+    public Button foldBiomeSettingsButton;
+    public GameObject biomeSettingsFoldContainer;
+
+    [Header("List / Table Folds (UI)")]
+    public Button foldEnemiesListButton;
+    public GameObject enemiesListFoldContainer;
+
+    public Button foldEntitiesListButton;
+    public GameObject entitiesListFoldContainer;
+
+    [Header("Stats Tables (UI)")]
+    public StatRowUI masterEnemyRow;
+    public List<StatRowUI> enemiesStatRows = new List<StatRowUI>();
+
+    [Space(10)]
+    public StatRowUI masterEntityRow;
+    public List<StatRowUI> entitiesStatRows = new List<StatRowUI>();
+
+    // ============================================================
+    // Generator Settings: Global
+    // ============================================================
+
+    [Header("General Settings - Seed")]
+    public Button foldSeedButton;
+    public GameObject seedFoldContainer;
+    public TMP_InputField seedInput;
+    public Toggle lockSeedToggle;
+
+    [Header("General Settings - Terrain")]
+    public Button foldTerrainButton;
+    public GameObject terrainFoldContainer;
+
+    public TMP_InputField biomeSizeInput;
+    public Slider warpNoiseStrengthSlider;
+    public TMP_Text warpNoiseStrengthText;
+
+    public Slider warpNoiseFrequencySlider;
+    public TMP_Text warpNoiseFrequencyText;
+
+    public Slider falloffNoiseSmoothnessSlider;
+    public TMP_Text falloffNoiseSmoothnessText;
+
+    [Header("General Settings - Water")]
+    public Button foldWaterButton;
+    public GameObject waterFoldContainer;
+    public Toggle enableWaterToggle;
+
+    public Slider lakeNoiseFrequencySlider;
+    public TMP_Text lakeNoiseFrequencyText;
+
+    public Slider lakeDensityThresholdSlider;
+    public TMP_Text lakeDensityThresholdText;
+
+    public Slider riverNoiseFrequencySlider;
+    public TMP_Text riverNoiseFrequencyText;
+
+    public Slider riverWidthSlider;
+    public TMP_Text riverWidthText;
+
+    [Header("General Settings - Obstacles")]
+    public Toggle enableObstaclesToggle;
+
+    [Header("General Settings - Enemies")]
+    public Button foldEnemiesButton;
+    public GameObject enemiesFoldContainer;
+    public Toggle enableEnemiesToggle;
+
+    public Button foldMainEnemyProbButton;
+    public GameObject mainEnemyProbFoldContainer;
+
+    public Slider enemyMainProbabilitySlider;
+    public TMP_Text enemyMainProbabilityText;
+
+    public TMP_InputField minGroupSeparationInput;
+    public TMP_InputField size1SpawnWeightInput;
+    public TMP_InputField size2SpawnWeightInput;
+    public TMP_InputField size3SpawnWeightInput;
+    public TMP_InputField size4SpawnWeightInput;
+
+    [Space(10)]
+    [Tooltip("Add the 5 enemies here and their corresponding Spawn Weight Input Field")]
+    public List<EnemyWeightUI> individualEnemyWeights = new List<EnemyWeightUI>();
+
+    [Header("General Settings - Entities")]
+    public Button foldEntitiesButton;
+    public GameObject entitiesFoldContainer;
+    public Toggle enableEntitiesToggle;
+
+    public TMP_InputField minSeparationInput;
+    public TMP_InputField minSameSeparationInput;
+    public TMP_InputField traderSpacingInput;
+    public TMP_InputField goblinSpacingInput;
+    public TMP_InputField bonfireSpacingInput;
+    public TMP_InputField chestSpacingInput;
+    public TMP_InputField slimeSpacingInput;
+    public TMP_InputField mimicSpacingInput;
+
+    // ============================================================
+    // Generator Settings: Biome Specific
+    // ============================================================
+
+    [Header("Biome Specific Settings")]
+    public List<BiomeUIElements> biomesUI = new List<BiomeUIElements>();
+
+    private BiomeConfig[] masterBiomeList;
+
+    // ============================================================
+    // State Preservation Structs
+    // ============================================================
+
+    private struct GlobalOriginalState {
+
+        public int seed;
+        public float approxBiomeSize;
+        public float warpStrength;
+        public float warpFrequency;
+        public float falloffSmoothness;
+        public bool enableWater;
+        public float lakeFrequency;
+        public float lakeThreshold;
+        public float riverFrequency;
+        public float riverWidth;
+        public bool enableObstacles;
+        public bool enableEnemies;
+        public float mainEnemyProbability;
+        public int minGroupSeparation;
+        public int[] groupSizeWeights;
+        public bool enableEntities;
+        public int minEntitySeparation;
+        public int minSameEntitySeparation;
+        public int merchantSpacing;
+        public int goblinSpacing;
+        public int bonfireSpacing;
+        public int chestSpacing;
+        public int slimeSpacing;
+        public int mimicSpacing;
+
+    }
+
+    private struct BiomeOriginalState {
+
+        public bool enablePuddles;
+        public float puddleNoiseFrequency;
+        public float puddleDensityThreshold;
+        public float puddleScatterInfluence;
+        public bool enableObstacles;
+        public float obstacleNoiseFrequency;
+        public float obstacleDensityThreshold;
+        public float obstacleScatterInfluence;
+        public bool enableEnemies;
+        public float enemyGroupFrequency;
+
+    }
+
+    private GlobalOriginalState originalGlobalState;
+
+    private Dictionary<string, BiomeOriginalState> originalBiomeStates = new Dictionary<string, BiomeOriginalState>();
+
+    // ============================================================
+    // Internal Control Variables
+    // ============================================================
+
+    private Dictionary<RectTransform, Coroutine> activeRotations = new Dictionary<RectTransform, Coroutine>();
+
+    private bool isAutoGenerateEnabled = false;
+    private bool isUpdatingUI = false;
+
+    // ============================================================
+    // Unity Lifecycle Hooks
+    // ============================================================
+
+    void Start() {
+
+        if (biomeGenerator == null) {
+
+            biomeGenerator = FindObjectOfType<BiomeGenerator>();
+
+        }
+
+        if (controlsPanel != null) {
+
+            controlsPanel.SetActive(false);
+
+        }
+
+        saveOriginalValues();
+
+        setupAllSliderListeners();
+        setupAllToggleListeners();
+        setupFoldButtons();
+
+        setupButtonHover(generateButton, generateHoverTextColor);
+        setupButtonHover(resetButton, resetHoverTextColor);
+        setupButtonHover(exitButton, exitHoverTextColor);
+
+        setupAutoGenerateButton();
+
+        if (imageOnlyButtons != null) {
+
+            foreach (Button btn in imageOnlyButtons) {
+
+                setupImageButtonHover(btn);
+
+            }
+
+        }
+
+        if (textHoverButtons != null) {
+
+            foreach (Button btn in textHoverButtons) {
+
+                if (btn != autoGenerateButton) {
+
+                    setupTextOnlyButtonHover(btn);
+
+                }
+
+            }
+
+        }
+
+        setupFadeHoverImages();
+
+        if (hyperlinkButtons != null) {
+
+            foreach (HyperlinkButton link in hyperlinkButtons) {
+
+                if (link.button != null) {
+
+                    if (string.IsNullOrEmpty(link.url) == false) {
+
+                        string targetUrl = link.url;
+                        
+                        link.button.onClick.AddListener(() => {
+
+                            Application.OpenURL(targetUrl);
+
+                        });
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        loadValuesToUI();
+
+        setupInputFormattingEvents();
+
+        refreshAllInputFormats();
+
+        if (generateButton != null) {
+
+            generateButton.onClick.AddListener(generateWorld);
+
+        }
+
+        if (exitButton != null) {
+
+            exitButton.onClick.AddListener(exitApplication);
+
+        }
+
+        if (resetButton != null) {
+
+            resetButton.onClick.AddListener(restoreOriginalValues);
+
+        }
+
+        if (seedInput != null) {
+
+            if (lockSeedToggle != null) {
+
+                seedInput.onEndEdit.AddListener((text) => {
+
+                    lockSeedToggle.isOn = true;
+
+                    triggerAutoGenerate();
+
+                });
+
+            }
+
+        }
+
+        if (lockSeedToggle != null) {
+
+            lockSeedToggle.onValueChanged.AddListener((isLocked) => {
+
+                if (isLocked) {
+
+                    if (seedInput != null) {
+
+                        if (string.IsNullOrEmpty(seedInput.text)) {
+
+                            if (biomeGenerator != null) {
+
+                                seedInput.text = biomeGenerator.seed.ToString();
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                triggerAutoGenerate();
+
+            });
+
+        }
+
+        generateWorld();
+
+    }
+
+    void Update() {
+
+        updateHoverLegend();
+
+        if (isControlsActive) {
+
+            if (Application.isFocused == false) {
+
+                return;
+
+            }
+
+            if (Input.GetMouseButtonDown(2) || Mathf.Abs(Input.mouseScrollDelta.y) > 0.1f) {
+
+                if (isPointerOverUI() == false) {
+
+                    hideControlsPanel();
+
+                }
+
+            }
+
+        }
+
+    }
+
+    // ============================================================
+    // Auto Generate Logic
+    // ============================================================
+
+    private void triggerAutoGenerate() {
+
+        if (isUpdatingUI) {
+
+            return;
+
+        }
+
+        if (isAutoGenerateEnabled) {
+
+            generateWorld();
+
+        }
+
+    }
+
+    private void setupAutoGenerateButton() {
+
+        if (autoGenerateButton == null) {
+
+            return;
+
+        }
+
+        EventTrigger trigger = autoGenerateButton.gameObject.GetComponent<EventTrigger>();
+
+        if (trigger != null) {
+
+            Destroy(trigger);
+
+        }
+
+        trigger = autoGenerateButton.gameObject.AddComponent<EventTrigger>();
+
+        autoGenerateButton.transition = Selectable.Transition.None;
+
+        TMP_Text btnText = autoGenerateButton.GetComponentInChildren<TMP_Text>();
+
+        if (btnText == null) {
+
+            return;
+
+        }
+
+        Color originalTextColor = btnText.color;
+
+        autoGenerateButton.onClick.RemoveAllListeners();
+
+        autoGenerateButton.onClick.AddListener(() => {
+
+            if (isAutoGenerateEnabled) {
+
+                isAutoGenerateEnabled = false;
+
+            }
+
+            else {
+
+                isAutoGenerateEnabled = true;
+
+            }
+
+            if (isAutoGenerateEnabled) {
+
+                btnText.color = autoGenerateActiveTextColor;
+
+            }
+
+            else {
+
+                btnText.color = autoGenerateActiveTextColor;
+
+            }
+
+            if (EventSystem.current != null) {
+
+                EventSystem.current.SetSelectedGameObject(null);
+
+            }
+
+        });
+
+        EventTrigger.Entry entryEnter = new EventTrigger.Entry();
+
+        entryEnter.eventID = EventTriggerType.PointerEnter;
+
+        entryEnter.callback.AddListener((data) => {
+
+            if (autoGenerateButton.interactable) {
+
+                btnText.color = autoGenerateActiveTextColor;
+
+            }
+
+        });
+
+        trigger.triggers.Add(entryEnter);
+
+        EventTrigger.Entry entryExit = new EventTrigger.Entry();
+
+        entryExit.eventID = EventTriggerType.PointerExit;
+
+        entryExit.callback.AddListener((data) => {
+
+            if (isAutoGenerateEnabled) {
+
+                btnText.color = autoGenerateActiveTextColor;
+
+            } 
+
+            else {
+
+                btnText.color = originalTextColor;
+
+            }
+
+        });
+
+        trigger.triggers.Add(entryExit);
+
+    }
+
+    // ============================================================
+    // Information Gathering & Interface Visuals
+    // ============================================================
+
+    private void updateHoverLegend() {
+
+        if (hoverLegendText == null) {
+
+            return;
+
+        }
+        
+        if (GridManager.Instance == null) {
+
+            return;
+
+        }
+        
+        if (biomeGenerator == null) {
+
+            return;
+
+        }
+
+        if (Application.isFocused == false) {
+
+            hoverLegendText.text = "";
+            return;
+
+        }
+        
+        if (isPointerOverUI()) {
+
+            hoverLegendText.text = "";
+            return;
+
+        }
+
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+        Plane groundPlane = new Plane(Vector3.up, Vector3.zero);
+
+        if (groundPlane.Raycast(ray, out float enter)) {
+
+            Vector3 hitPoint = ray.GetPoint(enter);
+
+            Vector2Int gridPos = GridManager.Instance.worldToGridPosition(hitPoint);
+
+            if (GridManager.Instance.tryGetCells(gridPos, out Cell cell)) {
+
+                if (cell != null) {
+
+                    string className = "Cell";
+                    string typeName = "Unknown";
+                    string biomeName = "Unknown";
+
+                    BiomeConfig biome = biomeGenerator.getBiomeConfigAt(gridPos);
+
+                    if (biome != null) {
+
+                        biomeName = biome.name;
+
+                    }
+
+                    bool foundDynamicOccupant = false;
+
+                    if (GridStateManager.Instance != null) {
+
+                        var state = GridStateManager.Instance.getEnemyStateAt(gridPos);
+
+                        if (state != null) {
+
+                            if (state.isDead == false) {
+
+                                if (state.enemyType != null) {
+
+                                    if (state.enemyType.isEnemy) {
+
+                                        className = "Enemy";
+
+                                    }
+
+                                    else {
+
+                                        className = "Entity";
+
+                                    }
+
+                                    typeName = state.enemyType.tileName;
+
+                                    foundDynamicOccupant = true;
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                    if (foundDynamicOccupant == false) {
+
+                        BiomeCellData data = biomeGenerator.getBiomeDataAt(gridPos);
+
+                        if (data.entityType != null) {
+
+                            className = "Entity";
+
+                            typeName = data.entityType.tileName;
+
+                        }
+
+                        else {
+
+                            if (cell.tileType != null) {
+
+                                if (data.groundType != null) {
+
+                                    if (cell.tileType.name != data.groundType.name) {
+
+                                        className = "Obstacle";
+
+                                        typeName = cell.tileType.tileName;
+
+                                    }
+
+                                    else {
+
+                                        className = "Cell";
+
+                                        if (cell.tileType.isWater) {
+
+                                            typeName = "Water";
+
+                                        }
+
+                                        else {
+
+                                            typeName = "Ground";
+
+                                        }
+
+                                    }
+
+                                }
+
+                                else {
+
+                                    className = "Cell";
+
+                                    if (cell.tileType.isWater) {
+
+                                        typeName = "Water";
+
+                                    }
+
+                                    else {
+
+                                        typeName = "Ground";
+
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                    hoverLegendText.text = className + " | " + typeName + " | " + biomeName + " | " + gridPos.x + "," + gridPos.y;
+
+                }
+
+                else {
+
+                    hoverLegendText.text = "";
+
+                }
+
+            }
+
+            else {
+
+                hoverLegendText.text = "";
+
+            }
+
+        }
+
+    }
+
+    private bool isPointerOverUI() {
+
+        if (EventSystem.current != null) {
+
+            return EventSystem.current.IsPointerOverGameObject();
+
+        }
+
+        return false;
+
+    }
+
+    private IEnumerator pulseControls() {
+
+        while (true) {
+
+            if (controlsCanvasGroup != null) {
+
+                float t = Mathf.PingPong(Time.time * pulseSpeed, 1f);
+
+                controlsCanvasGroup.alpha = Mathf.Lerp(minPulseOpacity, maxPulseOpacity, t);
+
+            }
+
+            yield return null;
+
+        }
+
+    }
+
+    private void hideControlsPanel() {
+
+        isControlsActive = false;
+
+        if (pulseCoroutine != null) {
+
+            StopCoroutine(pulseCoroutine);
+
+            pulseCoroutine = null;
+
+        }
+
+        if (controlsPanel != null) {
+
+            controlsPanel.SetActive(false);
+
+        }
+
+    }
+
+    // ============================================================
+    // Alpha Fades & Hover Interactions
+    // ============================================================
+
+    private void setupFadeHoverImages() {
+
+        if (hoverFadeImages == null) {
+
+            return;
+
+        }
+
+        foreach (Image img in hoverFadeImages) {
+
+            if (img == null) {
+
+                continue;
+
+            }
+
+            HoverFadeElement hoverElement = img.gameObject.GetComponent<HoverFadeElement>();
+
+            if (hoverElement == null) {
+
+                hoverElement = img.gameObject.AddComponent<HoverFadeElement>();
+
+            }
+
+            hoverElement.maxAlpha = maxHoverAlpha;
+
+            hoverElement.fadeSpeed = hoverFadeSpeed;
+
+        }
+
+    }
+
+    private void startAlphaFade(Image img, float targetAlpha) {
+
+        if (activeAlphaFades.ContainsKey(img)) {
+
+            if (activeAlphaFades[img] != null) {
+
+                StopCoroutine(activeAlphaFades[img]);
+
+            }
+
+        }
+
+        activeAlphaFades[img] = StartCoroutine(fadeImageAlpha(img, targetAlpha));
+
+    }
+
+    private IEnumerator fadeImageAlpha(Image img, float targetAlpha) {
+
+        Color c = img.color;
+
+        while (Mathf.Approximately(c.a, targetAlpha) == false) {
+
+            c.a = Mathf.MoveTowards(c.a, targetAlpha, Time.deltaTime * hoverFadeSpeed);
+
+            img.color = c;
+
+            yield return null;
+
+        }
+
+        c.a = targetAlpha;
+
+        img.color = c;
+
+    }
+
+    private void setupButtonHover(Button btn, Color hoverTextColor) {
+
+        if (btn == null) {
+
+            return;
+
+        }
+
+        btn.transition = Selectable.Transition.None;
+
+        TMP_Text btnText = btn.GetComponentInChildren<TMP_Text>();
+
+        if (btnText == null) {
+
+            return;
+
+        }
+
+        Color originalTextColor = btnText.color;
+
+        EventTrigger trigger = btn.gameObject.GetComponent<EventTrigger>();
+
+        if (trigger == null) {
+
+            trigger = btn.gameObject.AddComponent<EventTrigger>();
+
+        }
+
+        System.Action setHoverState = () => {
+
+            btnText.color = hoverTextColor;
+
+        };
+
+        System.Action resetToNormal = () => {
+
+            btnText.color = originalTextColor;
+
+        };
+
+        EventTrigger.Entry entryEnter = new EventTrigger.Entry();
+
+        entryEnter.eventID = EventTriggerType.PointerEnter;
+
+        entryEnter.callback.AddListener((data) => {
+
+            if (btn.interactable) {
+
+                setHoverState();
+
+            }
+
+        });
+
+        trigger.triggers.Add(entryEnter);
+
+        EventTrigger.Entry entryExit = new EventTrigger.Entry();
+
+        entryExit.eventID = EventTriggerType.PointerExit;
+
+        entryExit.callback.AddListener((data) => {
+
+            resetToNormal();
+
+        });
+
+        trigger.triggers.Add(entryExit);
+
+        EventTrigger.Entry entryClick = new EventTrigger.Entry();
+
+        entryClick.eventID = EventTriggerType.PointerClick;
+
+        entryClick.callback.AddListener((data) => {
+
+            resetToNormal();
+
+            if (EventSystem.current != null) {
+
+                EventSystem.current.SetSelectedGameObject(null);
+
+            }
+
+            StartCoroutine(checkHoverAfterEnable(btn, setHoverState));
+
+        });
+
+        trigger.triggers.Add(entryClick);
+
+    }
+
+    private void setupImageButtonHover(Button btn) {
+
+        if (btn == null) {
+
+            return;
+
+        }
+
+        btn.transition = Selectable.Transition.None;
+
+        Image bgImage = btn.GetComponent<Image>();
+
+        if (bgImage == null) {
+
+            return;
+
+        }
+
+        Color originalColor = bgImage.color;
+
+        EventTrigger trigger = btn.gameObject.GetComponent<EventTrigger>();
+
+        if (trigger == null) {
+
+            trigger = btn.gameObject.AddComponent<EventTrigger>();
+
+        }
+
+        System.Action setHoverState = () => {
+
+            bgImage.color = imageButtonHoverColor;
+
+        };
+
+        System.Action resetToNormal = () => {
+
+            bgImage.color = originalColor;
+
+        };
+
+        EventTrigger.Entry entryEnter = new EventTrigger.Entry();
+
+        entryEnter.eventID = EventTriggerType.PointerEnter;
+
+        entryEnter.callback.AddListener((data) => {
+
+            if (btn.interactable) {
+
+                setHoverState();
+
+            }
+
+        });
+
+        trigger.triggers.Add(entryEnter);
+
+        EventTrigger.Entry entryExit = new EventTrigger.Entry();
+
+        entryExit.eventID = EventTriggerType.PointerExit;
+
+        entryExit.callback.AddListener((data) => {
+
+            resetToNormal();
+
+        });
+
+        trigger.triggers.Add(entryExit);
+
+        EventTrigger.Entry entryClick = new EventTrigger.Entry();
+
+        entryClick.eventID = EventTriggerType.PointerClick;
+
+        entryClick.callback.AddListener((data) => {
+
+            resetToNormal();
+
+            if (EventSystem.current != null) {
+
+                EventSystem.current.SetSelectedGameObject(null);
+
+            }
+
+            StartCoroutine(checkHoverAfterEnable(btn, setHoverState));
+
+        });
+
+        trigger.triggers.Add(entryClick);
+
+    }
+
+    private void setupTextOnlyButtonHover(Button btn) {
+
+        if (btn == null) {
+
+            return;
+
+        }
+
+        btn.transition = Selectable.Transition.None;
+
+        TMP_Text btnText = btn.GetComponentInChildren<TMP_Text>();
+
+        if (btnText == null) {
+
+            return;
+
+        }
+
+        Color originalColor = btnText.color;
+
+        EventTrigger trigger = btn.gameObject.GetComponent<EventTrigger>();
+
+        if (trigger == null) {
+
+            trigger = btn.gameObject.AddComponent<EventTrigger>();
+
+        }
+
+        System.Action setHoverState = () => {
+
+            btnText.color = textButtonHoverColor;
+
+        };
+
+        System.Action resetToNormal = () => {
+
+            btnText.color = originalColor;
+
+        };
+
+        EventTrigger.Entry entryEnter = new EventTrigger.Entry();
+
+        entryEnter.eventID = EventTriggerType.PointerEnter;
+
+        entryEnter.callback.AddListener((data) => {
+
+            if (btn.interactable) {
+
+                setHoverState();
+
+            }
+
+        });
+
+        trigger.triggers.Add(entryEnter);
+
+        EventTrigger.Entry entryExit = new EventTrigger.Entry();
+
+        entryExit.eventID = EventTriggerType.PointerExit;
+
+        entryExit.callback.AddListener((data) => {
+
+            resetToNormal();
+
+        });
+
+        trigger.triggers.Add(entryExit);
+
+        EventTrigger.Entry entryClick = new EventTrigger.Entry();
+
+        entryClick.eventID = EventTriggerType.PointerClick;
+
+        entryClick.callback.AddListener((data) => {
+
+            resetToNormal();
+
+            if (EventSystem.current != null) {
+
+                EventSystem.current.SetSelectedGameObject(null);
+
+            }
+
+            StartCoroutine(checkHoverAfterEnable(btn, setHoverState));
+
+        });
+
+        trigger.triggers.Add(entryClick);
+
+    }
+
+    private IEnumerator checkHoverAfterEnable(Button btn, System.Action setHoverAction) {
+
+        while (btn != null && btn.interactable == false) {
+
+            yield return null;
+
+        }
+
+        yield return new WaitForEndOfFrame();
+
+        if (btn != null) {
+
+            if (btn.gameObject != null) {
+
+                PointerEventData pointerData = new PointerEventData(EventSystem.current);
+
+                pointerData.position = Input.mousePosition;
+
+                List<RaycastResult> results = new List<RaycastResult>();
+
+                EventSystem.current.RaycastAll(pointerData, results);
+
+                foreach (var result in results) {
+
+                    if (result.gameObject == btn.gameObject) {
+
+                        setHoverAction();
+
+                        break;
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    }
+
+    // ============================================================
+    // State Saving & Loading
+    // ============================================================
+
+    private void saveOriginalValues() {
+
+        if (biomeGenerator == null) {
+
+            return;
+
+        }
+
+        if (biomeGenerator.biomes != null) {
+
+            masterBiomeList = (BiomeConfig[])biomeGenerator.biomes.Clone();
+
+        }
+
+        originalGlobalState = new GlobalOriginalState {
+
+            seed = biomeGenerator.seed,
+            approxBiomeSize = biomeGenerator.approxBiomeSize,
+            warpStrength = biomeGenerator.warpStrength,
+            warpFrequency = biomeGenerator.warpFrequency,
+            falloffSmoothness = biomeGenerator.falloffSmoothness,
+            enableWater = biomeGenerator.enableWater,
+            lakeFrequency = biomeGenerator.lakeFrequency,
+            lakeThreshold = biomeGenerator.lakeThreshold,
+            riverFrequency = biomeGenerator.riverFrequency,
+            riverWidth = biomeGenerator.riverWidth,
+            enableObstacles = biomeGenerator.enableObstacles,
+            enableEnemies = biomeGenerator.enableEnemies,
+            mainEnemyProbability = biomeGenerator.mainEnemyProbability,
+            minGroupSeparation = biomeGenerator.minGroupSeparation,
+            enableEntities = biomeGenerator.enableEntities,
+            minEntitySeparation = biomeGenerator.minEntitySeparation,
+            minSameEntitySeparation = biomeGenerator.minSameEntitySeparation,
+            merchantSpacing = biomeGenerator.merchantSpacing,
+            goblinSpacing = biomeGenerator.goblinSpacing,
+            bonfireSpacing = biomeGenerator.bonfireSpacing,
+            chestSpacing = biomeGenerator.chestSpacing,
+            slimeSpacing = biomeGenerator.slimeSpacing,
+            mimicSpacing = biomeGenerator.mimicSpacing
+
+        };
+
+        if (biomeGenerator.groupSizeWeights != null) {
+
+            originalGlobalState.groupSizeWeights = (int[])biomeGenerator.groupSizeWeights.Clone();
+
+        }
+
+        originalBiomeStates.Clear();
+
+        if (masterBiomeList != null) {
+
+            foreach (var config in masterBiomeList) {
+
+                if (config != null) {
+
+                    originalBiomeStates[config.name] = new BiomeOriginalState {
+
+                        enablePuddles = config.enablePuddles,
+                        puddleNoiseFrequency = config.puddleNoiseFrequency,
+                        puddleDensityThreshold = config.puddleDensityThreshold,
+                        puddleScatterInfluence = config.puddleScatterInfluence,
+                        enableObstacles = config.enableObstacles,
+                        obstacleNoiseFrequency = config.obstacleNoiseFrequency,
+                        obstacleDensityThreshold = config.obstacleDensityThreshold,
+                        obstacleScatterInfluence = config.obstacleScatterInfluence,
+                        enableEnemies = config.enableEnemies,
+                        enemyGroupFrequency = config.enemyGroupFrequency
+
+                    };
+
+                }
+            }
+        }
+    }
+
+    private void restoreOriginalValues() {
+
+        if (biomeGenerator == null) {
+
+            return;
+
+        }
+
+        bool wasUpdating = isUpdatingUI;
+
+        isUpdatingUI = true;
+
+        bool isLocked = false;
+        
+        if (lockSeedToggle != null) {
+
+            if (lockSeedToggle.isOn) {
+
+                isLocked = true;
+
+            }
+
+        }
+
+        int currentSeed = biomeGenerator.seed;
+
+        string currentSeedText = "";
+        
+        if (seedInput != null) {
+
+            currentSeedText = seedInput.text;
+
+        }
+
+        foreach (var ew in individualEnemyWeights) {
+
+            if (ew.enemyTile != null) {
+
+                ew.enemyTile.restoreOriginalWeight();
+
+            }
+
+        }
+
+        biomeGenerator.recalculateAllBiomeEnemyWeights();
+
+        biomeGenerator.approxBiomeSize = originalGlobalState.approxBiomeSize;
+        biomeGenerator.warpStrength = originalGlobalState.warpStrength;
+        biomeGenerator.warpFrequency = originalGlobalState.warpFrequency;
+        biomeGenerator.falloffSmoothness = originalGlobalState.falloffSmoothness;
+        biomeGenerator.enableWater = originalGlobalState.enableWater;
+        biomeGenerator.lakeFrequency = originalGlobalState.lakeFrequency;
+        biomeGenerator.lakeThreshold = originalGlobalState.lakeThreshold;
+        biomeGenerator.riverFrequency = originalGlobalState.riverFrequency;
+        biomeGenerator.riverWidth = originalGlobalState.riverWidth;
+        biomeGenerator.enableObstacles = originalGlobalState.enableObstacles;
+        biomeGenerator.enableEnemies = originalGlobalState.enableEnemies;
+        biomeGenerator.mainEnemyProbability = originalGlobalState.mainEnemyProbability;
+        biomeGenerator.minGroupSeparation = originalGlobalState.minGroupSeparation;
+
+        if (originalGlobalState.groupSizeWeights != null) {
+
+            biomeGenerator.groupSizeWeights = (int[])originalGlobalState.groupSizeWeights.Clone();
+
+        }
+
+        biomeGenerator.enableEntities = originalGlobalState.enableEntities;
+        biomeGenerator.minEntitySeparation = originalGlobalState.minEntitySeparation;
+        biomeGenerator.minSameEntitySeparation = originalGlobalState.minSameEntitySeparation;
+        biomeGenerator.merchantSpacing = originalGlobalState.merchantSpacing;
+        biomeGenerator.goblinSpacing = originalGlobalState.goblinSpacing;
+        biomeGenerator.bonfireSpacing = originalGlobalState.bonfireSpacing;
+        biomeGenerator.chestSpacing = originalGlobalState.chestSpacing;
+        biomeGenerator.slimeSpacing = originalGlobalState.slimeSpacing;
+        biomeGenerator.mimicSpacing = originalGlobalState.mimicSpacing;
+
+        if (masterBiomeList != null) {
+
+            biomeGenerator.biomes = (BiomeConfig[])masterBiomeList.Clone();
+
+            foreach (var config in masterBiomeList) {
+
+                if (config != null) {
+
+                    if (originalBiomeStates.TryGetValue(config.name, out BiomeOriginalState originalState)) {
+
+                        config.enablePuddles = originalState.enablePuddles;
+                        config.puddleNoiseFrequency = originalState.puddleNoiseFrequency;
+                        config.puddleDensityThreshold = originalState.puddleDensityThreshold;
+                        config.puddleScatterInfluence = originalState.puddleScatterInfluence;
+                        config.enableObstacles = originalState.enableObstacles;
+                        config.obstacleNoiseFrequency = originalState.obstacleNoiseFrequency;
+                        config.obstacleDensityThreshold = originalState.obstacleDensityThreshold;
+                        config.obstacleScatterInfluence = originalState.obstacleScatterInfluence;
+                        config.enableEnemies = originalState.enableEnemies;
+                        config.enemyGroupFrequency = originalState.enemyGroupFrequency;
+
+                    }
+                }
+            }
+        }
+
+        loadValuesToUI();
+
+        if (isLocked) {
+
+            biomeGenerator.seed = currentSeed;
+
+            if (seedInput != null) {
+
+                seedInput.text = currentSeedText;
+
+            }
+        }
+
+        else {
+
+            if (seedInput != null) {
+
+                seedInput.text = "";
+
+            }
+        }
+
+        refreshAllInputFormats();
+
+        isUpdatingUI = wasUpdating;
+
+        triggerAutoGenerate();
+
+    }
+
+    // ============================================================
+    // UI Connections & Listeners
+    // ============================================================
+
+    private void setupAllSliderListeners() {
+
+        linkSliderToText(warpNoiseStrengthSlider, warpNoiseStrengthText);
+        linkSliderToText(warpNoiseFrequencySlider, warpNoiseFrequencyText);
+        linkSliderToText(falloffNoiseSmoothnessSlider, falloffNoiseSmoothnessText);
+        linkSliderToText(lakeNoiseFrequencySlider, lakeNoiseFrequencyText);
+        linkSliderToText(lakeDensityThresholdSlider, lakeDensityThresholdText);
+        linkSliderToText(riverNoiseFrequencySlider, riverNoiseFrequencyText);
+        linkSliderToText(riverWidthSlider, riverWidthText);
+        linkSliderToText(enemyMainProbabilitySlider, enemyMainProbabilityText);
+
+        foreach (var biomeUI in biomesUI) {
+
+            linkSliderToText(biomeUI.puddleNoiseFrequency, biomeUI.puddleNoiseFrequencyText);
+            linkSliderToText(biomeUI.puddleDensityThreshold, biomeUI.puddleDensityThresholdText);
+            linkSliderToText(biomeUI.puddleScatterInfluence, biomeUI.puddleScatterInfluenceText);
+            linkSliderToText(biomeUI.obstacleNoiseFrequency, biomeUI.obstacleNoiseFrequencyText);
+            linkSliderToText(biomeUI.obstacleDensityThreshold, biomeUI.obstacleDensityThresholdText);
+            linkSliderToText(biomeUI.obstacleScatterInfluence, biomeUI.obstacleScatterInfluenceText);
+            linkSliderToText(biomeUI.enemyGroupFrequency, biomeUI.enemyGroupFrequencyText);
+
+        }
+
+    }
+
+    private void linkSliderToText(Slider slider, TMP_Text textDisplay) {
+
+        if (slider != null) {
+
+            if (textDisplay != null) {
+
+                textDisplay.text = slider.value.ToString("0.00");
+
+                float initialSliderValue = slider.value;
+
+                slider.onValueChanged.AddListener((val) => {
+
+                    textDisplay.text = val.ToString("0.00");
+
+                });
+
+                EventTrigger trigger = slider.gameObject.GetComponent<EventTrigger>();
+                
+                if (trigger == null) {
+
+                    trigger = slider.gameObject.AddComponent<EventTrigger>();
+
+                }
+
+                EventTrigger.Entry entryPointerDown = new EventTrigger.Entry();
+
+                entryPointerDown.eventID = EventTriggerType.PointerDown;
+
+                entryPointerDown.callback.AddListener((data) => {
+
+                    initialSliderValue = slider.value;
+
+                });
+
+                trigger.triggers.Add(entryPointerDown);
+
+                EventTrigger.Entry entryPointerUp = new EventTrigger.Entry();
+
+                entryPointerUp.eventID = EventTriggerType.PointerUp;
+
+                entryPointerUp.callback.AddListener((data) => {
+
+                    if (Mathf.Approximately(slider.value, initialSliderValue) == false) {
+
+                        triggerAutoGenerate();
+
+                        initialSliderValue = slider.value;
+
+                    }
+
+                });
+
+                trigger.triggers.Add(entryPointerUp);
+
+            }
+
+        }
+
+    }
+
+    private void setupAllToggleListeners() {
+
+        setupSectionToggle(enableWaterToggle, foldWaterButton, waterFoldContainer);
+        setupSectionToggle(enableEnemiesToggle, foldEnemiesButton, enemiesFoldContainer);
+        setupSectionToggle(enableEntitiesToggle, foldEntitiesButton, entitiesFoldContainer);
+
+        enableObstaclesToggle.onValueChanged.AddListener((isOn) => {
+
+            triggerAutoGenerate();
+
+        });
+
+        foreach (var biomeUI in biomesUI) {
+
+            if (biomeUI.enableBiomeToggle != null) {
+
+                if (biomeUI.biomeSettingsContainer != null) {
+
+                    biomeUI.biomeSettingsContainer.SetActive(biomeUI.enableBiomeToggle.isOn);
+
+                    if (biomeUI.foldBiomeButton != null) {
+
+                        biomeUI.foldBiomeButton.interactable = biomeUI.enableBiomeToggle.isOn;
+
+                    }
+
+                    biomeUI.enableBiomeToggle.onValueChanged.AddListener((isOn) => {
+
+                        if (isOn == false) {
+
+                            int activeCount = 0;
+
+                            foreach (var b in biomesUI) {
+
+                                if (b.enableBiomeToggle != null) {
+
+                                    if (b.enableBiomeToggle.isOn) {
+
+                                        activeCount = activeCount + 1;
+
+                                    }
+
+                                }
+
+                            }
+
+                            if (activeCount == 0) {
+
+                                Debug.LogWarning("Security measure: You cannot disable the last biome of the world.");
+
+                                biomeUI.enableBiomeToggle.SetIsOnWithoutNotify(true);
+                                biomeUI.biomeSettingsContainer.SetActive(true);
+
+                                if (biomeUI.foldBiomeButton != null) {
+
+                                    biomeUI.foldBiomeButton.interactable = true;
+
+                                }
+
+                                return;
+
+                            }
+
+                        }
+
+                        handleBiomeSettingsContainer(biomeUI, isOn);
+
+                        triggerAutoGenerate();
+
+                    });
+
+                }
+
+            }
+
+            linkToggleToContainers(biomeUI.enablePuddles, biomeUI.puddlesContainer);
+            linkToggleToContainers(biomeUI.enableObstacles, biomeUI.obstaclesContainer);
+            linkToggleToContainers(biomeUI.enableEnemies, biomeUI.enemiesContainer);
+
+        }
+
+    }
+
+    private void setupSectionToggle(Toggle toggle, Button foldButton, GameObject container) {
+
+        if (toggle == null) {
+
+            return;
+
+        }
+
+        if (container != null) {
+
+            container.SetActive(toggle.isOn);
+
+        }
+        
+        if (foldButton != null) {
+
+            foldButton.interactable = toggle.isOn;
+
+        }
+
+        toggle.onValueChanged.AddListener((isOn) => {
+
+            if (container != null) {
+
+                container.SetActive(isOn);
+
+            }
+
+            if (foldButton != null) {
+
+                foldButton.interactable = isOn;
+
+                RectTransform btnRect = foldButton.GetComponent<RectTransform>();
+
+                if (btnRect != null) {
+
+                    float targetZ = 0f;
+
+                    if (isOn) {
+
+                        targetZ = 180f;
+
+                    }
+
+                    if (activeRotations.ContainsKey(btnRect)) {
+
+                        if (activeRotations[btnRect] != null) {
+
+                            StopCoroutine(activeRotations[btnRect]);
+
+                        }
+
+                    }
+
+                    activeRotations[btnRect] = StartCoroutine(smoothRotateButton(btnRect, targetZ, 0.2f));
+
+                }
+
+            }
+
+            triggerAutoGenerate();
+
+        });
+
+    }
+
+    private void handleBiomeSettingsContainer(BiomeUIElements biomeUI, bool isOn) {
+
+        biomeUI.biomeSettingsContainer.SetActive(isOn);
+
+        if (biomeUI.foldBiomeButton != null) {
+
+            biomeUI.foldBiomeButton.interactable = isOn;
+
+            RectTransform btnRect = biomeUI.foldBiomeButton.GetComponent<RectTransform>();
+
+            if (btnRect != null) {
+
+                float targetZ = 0f;
+
+                if (isOn) {
+
+                    targetZ = 180f;
+
+                }
+
+                if (activeRotations.ContainsKey(btnRect)) {
+
+                    if (activeRotations[btnRect] != null) {
+
+                        StopCoroutine(activeRotations[btnRect]);
+
+                    }
+
+                }
+
+                activeRotations[btnRect] = StartCoroutine(smoothRotateButton(btnRect, targetZ, 0.2f));
+
+            }
+
+        }
+
+    }
+
+    private void linkToggleToContainers(Toggle toggle, params GameObject[] containers) {
+
+        if (toggle == null) {
+
+            return;
+
+        }
+
+        if (containers == null) {
+
+            return;
+
+        }
+
+        if (containers.Length == 0) {
+
+            return;
+
+        }
+
+        foreach (var container in containers) {
+
+            if (container != null) {
+
+                container.SetActive(toggle.isOn);
+
+            }
+
+        }
+
+        toggle.onValueChanged.AddListener((isOn) => {
+
+            foreach (var container in containers) {
+
+                if (container != null) {
+
+                    container.SetActive(isOn);
+
+                }
+
+            }
+
+            triggerAutoGenerate();
+
+        });
+
+    }
+
+    private void setupFoldButtons() {
+
+        linkFoldButton(foldSeedButton, seedFoldContainer);
+        linkFoldButton(foldGeneralSettingsButton, generalSettingsFoldContainer);
+        linkFoldButton(foldBiomeSettingsButton, biomeSettingsFoldContainer);
+
+        linkFoldButton(foldEnemiesListButton, enemiesListFoldContainer);
+        linkFoldButton(foldEntitiesListButton, entitiesListFoldContainer);
+
+        linkFoldButton(foldTerrainButton, terrainFoldContainer);
+        linkFoldButton(foldWaterButton, waterFoldContainer);
+
+        linkFoldButton(foldEnemiesButton, enemiesFoldContainer);
+        linkFoldButton(foldMainEnemyProbButton, mainEnemyProbFoldContainer);
+        linkFoldButton(foldEntitiesButton, entitiesFoldContainer);
+
+        foreach (var biomeUI in biomesUI) {
+
+            linkFoldButton(biomeUI.foldBiomeButton, biomeUI.biomeSettingsContainer);
+
+        }
+
+    }
+
+    private void linkFoldButton(Button button, GameObject container) {
+
+        if (button != null) {
+
+            if (container != null) {
+
+                RectTransform btnRect = button.GetComponent<RectTransform>();
+
+                if (btnRect != null) {
+
+                    float initialZ = 0f;
+
+                    if (container.activeSelf) {
+
+                        initialZ = 180f;
+
+                    }
+
+                    btnRect.localEulerAngles = new Vector3(0, 0, initialZ);
+
+                }
+
+                button.onClick.AddListener(() => {
+
+                    bool isUnfolding = false;
+
+                    if (container.activeSelf == false) {
+
+                        isUnfolding = true;
+
+                    }
+                    
+                    container.SetActive(isUnfolding);
+
+                    if (btnRect != null) {
+
+                        float targetZ = 0f;
+
+                        if (isUnfolding) {
+
+                            targetZ = 180f;
+
+                        }
+
+                        if (activeRotations.ContainsKey(btnRect)) {
+
+                            if (activeRotations[btnRect] != null) {
+
+                                StopCoroutine(activeRotations[btnRect]);
+
+                            }
+
+                        }
+
+                        activeRotations[btnRect] = StartCoroutine(smoothRotateButton(btnRect, targetZ, 0.2f));
+
+                    }
+
+                });
+
+            }
+
+        }
+
+    }
+
+    private IEnumerator smoothRotateButton(RectTransform rect, float targetZ, float duration) {
+
+        Quaternion startRot = rect.localRotation;
+
+        Quaternion endRot = Quaternion.Euler(0, 0, targetZ);
+
+        float time = 0;
+
+        while (time < duration) {
+
+            rect.localRotation = Quaternion.Lerp(startRot, endRot, time / duration);
+
+            time = time + Time.deltaTime;
+
+            yield return null;
+
+        }
+
+        rect.localRotation = endRot;
+
+    }
+
+    private void loadValuesToUI() {
+
+        if (biomeGenerator == null) { 
+            
+            return; 
+            
+        }
+
+        if (masterBiomeList == null) { 
+            
+            return; 
+            
+        }
+
+        bool wasUpdating = isUpdatingUI;
+        isUpdatingUI = true;
+
+        if (seedInput != null) { 
+            
+            seedInput.text = biomeGenerator.seed.ToString(); 
+            
+        }
+
+        if (biomeSizeInput != null) { 
+            
+            biomeSizeInput.text = biomeGenerator.approxBiomeSize.ToString(); 
+            
+        }
+
+        if (warpNoiseStrengthSlider != null) { 
+            
+            warpNoiseStrengthSlider.value = biomeGenerator.warpStrength; 
+            
+        }
+
+        if (warpNoiseFrequencySlider != null) { 
+            
+            warpNoiseFrequencySlider.value = biomeGenerator.warpFrequency; 
+            
+        }
+
+        if (falloffNoiseSmoothnessSlider != null) { 
+            
+            falloffNoiseSmoothnessSlider.value = biomeGenerator.falloffSmoothness; 
+            
+        }
+
+        if (enableWaterToggle != null) { 
+            
+            enableWaterToggle.isOn = biomeGenerator.enableWater; 
+            
+        }
+
+        if (lakeNoiseFrequencySlider != null) { 
+            
+            lakeNoiseFrequencySlider.value = biomeGenerator.lakeFrequency; 
+            
+        }
+
+        if (lakeDensityThresholdSlider != null) { 
+            
+            lakeDensityThresholdSlider.value = biomeGenerator.lakeThreshold; 
+            
+        }
+
+        if (riverNoiseFrequencySlider != null) { 
+            
+            riverNoiseFrequencySlider.value = biomeGenerator.riverFrequency; 
+            
+        }
+
+        if (riverWidthSlider != null) { 
+            
+            riverWidthSlider.value = biomeGenerator.riverWidth; 
+            
+        }
+
+        if (enableObstaclesToggle != null) { 
+            
+            enableObstaclesToggle.isOn = biomeGenerator.enableObstacles; 
+            
+        }
+
+        if (enableEnemiesToggle != null) { 
+            
+            enableEnemiesToggle.isOn = biomeGenerator.enableEnemies; 
+            
+        }
+
+        if (enemyMainProbabilitySlider != null) { 
+            
+            enemyMainProbabilitySlider.value = biomeGenerator.mainEnemyProbability; 
+            
+        }
+
+        if (minGroupSeparationInput != null) { 
+            
+            minGroupSeparationInput.text = biomeGenerator.minGroupSeparation.ToString(); 
+            
+        }
+
+        if (biomeGenerator.groupSizeWeights != null) {
+
+            if (biomeGenerator.groupSizeWeights.Length >= 4) {
+
+                if (size1SpawnWeightInput != null) { 
+                    
+                    size1SpawnWeightInput.text = biomeGenerator.groupSizeWeights[0].ToString(); 
+                    
+                }
+
+                if (size2SpawnWeightInput != null) { 
+                    
+                    size2SpawnWeightInput.text = biomeGenerator.groupSizeWeights[1].ToString(); 
+                    
+                }
+
+                if (size3SpawnWeightInput != null) { 
+                    
+                    size3SpawnWeightInput.text = biomeGenerator.groupSizeWeights[2].ToString(); 
+                    
+                }
+
+                if (size4SpawnWeightInput != null) { 
+                    
+                    size4SpawnWeightInput.text = biomeGenerator.groupSizeWeights[3].ToString(); 
+                    
+                }
+
+            }
+
+        }
+
+        foreach (var ew in individualEnemyWeights) {
+
+            if (ew.enemyTile != null) {
+
+                if (ew.weightInput != null) {
+
+                    ew.weightInput.text = ew.enemyTile.spawnWeight.ToString();
+
+                }
+
+            }
+
+        }
+
+        if (enableEntitiesToggle != null) { 
+            
+            enableEntitiesToggle.isOn = biomeGenerator.enableEntities; 
+            
+        }
+
+        if (minSeparationInput != null) { 
+            
+            minSeparationInput.text = biomeGenerator.minEntitySeparation.ToString(); 
+            
+        }
+
+        if (minSameSeparationInput != null) { 
+            
+            minSameSeparationInput.text = biomeGenerator.minSameEntitySeparation.ToString(); 
+            
+        }
+
+        if (traderSpacingInput != null) { 
+            
+            traderSpacingInput.text = biomeGenerator.merchantSpacing.ToString(); 
+            
+        }
+
+        if (goblinSpacingInput != null) { 
+            
+            goblinSpacingInput.text = biomeGenerator.goblinSpacing.ToString(); 
+            
+        }
+
+        if (bonfireSpacingInput != null) { 
+            
+            bonfireSpacingInput.text = biomeGenerator.bonfireSpacing.ToString(); 
+            
+        }
+
+        if (chestSpacingInput != null) { 
+            
+            chestSpacingInput.text = biomeGenerator.chestSpacing.ToString(); 
+            
+        }
+
+        if (slimeSpacingInput != null) { 
+            
+            slimeSpacingInput.text = biomeGenerator.slimeSpacing.ToString(); 
+            
+        }
+
+        if (mimicSpacingInput != null) { 
+            
+            mimicSpacingInput.text = biomeGenerator.mimicSpacing.ToString(); 
+            
+        }
+
+        foreach (var biomeUI in biomesUI) {
+
+            BiomeConfig config = System.Array.Find(masterBiomeList, b => b.name == biomeUI.targetBiomeName);
+            
+            if (config != null) {
+
+                if (biomeUI.enableBiomeToggle != null) {
+
+                    bool exists = System.Array.Exists(biomeGenerator.biomes, b => b.name == config.name);
+
+                    biomeUI.enableBiomeToggle.SetIsOnWithoutNotify(exists);
+                    
+                    if (biomeUI.biomeSettingsContainer != null) {
+
+                        biomeUI.biomeSettingsContainer.SetActive(exists);
+
+                    }
+
+                    if (biomeUI.foldBiomeButton != null) {
+
+                        biomeUI.foldBiomeButton.interactable = exists;
+
+                    }
+
+                }
+
+                if (biomeUI.enablePuddles != null) { 
+                    
+                    biomeUI.enablePuddles.isOn = config.enablePuddles; 
+                    
+                }
+
+                if (biomeUI.puddleNoiseFrequency != null) { 
+                    
+                    biomeUI.puddleNoiseFrequency.value = config.puddleNoiseFrequency; 
+                    
+                }
+
+                if (biomeUI.puddleDensityThreshold != null) { 
+                    
+                    biomeUI.puddleDensityThreshold.value = config.puddleDensityThreshold; 
+                    
+                }
+
+                if (biomeUI.puddleScatterInfluence != null) { 
+                    
+                    biomeUI.puddleScatterInfluence.value = config.puddleScatterInfluence; 
+                    
+                }
+
+                if (biomeUI.enableObstacles != null) { 
+                    
+                    biomeUI.enableObstacles.isOn = config.enableObstacles; 
+                    
+                }
+
+                if (biomeUI.obstacleNoiseFrequency != null) { 
+                    
+                    biomeUI.obstacleNoiseFrequency.value = config.obstacleNoiseFrequency; 
+                    
+                }
+
+                if (biomeUI.obstacleDensityThreshold != null) { 
+                    
+                    biomeUI.obstacleDensityThreshold.value = config.obstacleDensityThreshold; 
+                    
+                }
+
+                if (biomeUI.obstacleScatterInfluence != null) { 
+                    
+                    biomeUI.obstacleScatterInfluence.value = config.obstacleScatterInfluence; 
+                    
+                }
+
+                if (biomeUI.enableEnemies != null) { 
+                    
+                    biomeUI.enableEnemies.isOn = config.enableEnemies; 
+                    
+                }
+
+                if (biomeUI.enemyGroupFrequency != null) { 
+                    
+                    biomeUI.enemyGroupFrequency.value = config.enemyGroupFrequency; 
+                    
+                }
+
+            }
+
+        }
+
+        isUpdatingUI = wasUpdating;
+
+    }
+
+    // ============================================================
+    // Generation Process
+    // ============================================================
+
+    private void generateWorld() {
+
+        if (biomeGenerator == null) { 
+            
+            return; 
+            
+        }
+
+        if (GridManager.Instance == null) { 
+            
+            return; 
+            
+        }
+
+        if (masterBiomeList == null) { 
+            
+            return; 
+            
+        }
+
+        if (lockSeedToggle != null) {
+
+            if (lockSeedToggle.isOn == false) {
+
+                int randomSeed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+
+                biomeGenerator.seed = randomSeed;
+                
+                if (seedInput != null) {
+
+                    seedInput.text = randomSeed.ToString();
+
+                }
+
+            }
+
+            else {
+
+                if (seedInput != null) {
+
+                    if (int.TryParse(seedInput.text, out int parsedSeed)) {
+
+                        biomeGenerator.seed = parsedSeed;
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        else {
+
+            if (seedInput != null) {
+
+                if (int.TryParse(seedInput.text, out int parsedSeed)) {
+
+                    biomeGenerator.seed = parsedSeed;
+
+                }
+
+            }
+
+        }
+
+        biomeGenerator.clearFrameCache();
+        biomeGenerator.InitializeOffsets();
+
+        if (biomeSizeInput != null) {
+
+            if (float.TryParse(biomeSizeInput.text, out float parsedSize)) {
+
+                biomeGenerator.approxBiomeSize = parsedSize;
+
+            }
+
+        }
+
+        if (warpNoiseStrengthSlider != null) { 
+            
+            biomeGenerator.warpStrength = warpNoiseStrengthSlider.value; 
+            
+        }
+
+        if (warpNoiseFrequencySlider != null) { 
+            
+            biomeGenerator.warpFrequency = warpNoiseFrequencySlider.value; 
+            
+        }
+
+        if (falloffNoiseSmoothnessSlider != null) { 
+            
+            biomeGenerator.falloffSmoothness = falloffNoiseSmoothnessSlider.value; 
+            
+        }
+
+        if (enableWaterToggle != null) { 
+            
+            biomeGenerator.enableWater = enableWaterToggle.isOn; 
+            
+        }
+
+        if (lakeNoiseFrequencySlider != null) { 
+            
+            biomeGenerator.lakeFrequency = lakeNoiseFrequencySlider.value; 
+            
+        }
+
+        if (lakeDensityThresholdSlider != null) { 
+            
+            biomeGenerator.lakeThreshold = lakeDensityThresholdSlider.value; 
+            
+        }
+
+        if (riverNoiseFrequencySlider != null) { 
+            
+            biomeGenerator.riverFrequency = riverNoiseFrequencySlider.value; 
+            
+        }
+
+        if (riverWidthSlider != null) { 
+            
+            biomeGenerator.riverWidth = riverWidthSlider.value; 
+            
+        }
+
+        if (enableObstaclesToggle != null) { 
+            
+            biomeGenerator.enableObstacles = enableObstaclesToggle.isOn; 
+            
+        }
+
+        if (enableEnemiesToggle != null) { 
+            
+            biomeGenerator.enableEnemies = enableEnemiesToggle.isOn; 
+            
+        }
+
+        if (enemyMainProbabilitySlider != null) { 
+            
+            biomeGenerator.mainEnemyProbability = enemyMainProbabilitySlider.value; 
+            
+        }
+        
+        if (minGroupSeparationInput != null) {
+
+            if (int.TryParse(minGroupSeparationInput.text, out int minGroupSep)) {
+
+                biomeGenerator.minGroupSeparation = minGroupSep;
+
+            }
+
+        }
+
+        int[] newWeights = new int[4];
+
+        string weight1 = "0";
+        string weight2 = "0";
+        string weight3 = "0";
+        string weight4 = "0";
+
+        if (size1SpawnWeightInput != null) { 
+            
+            weight1 = size1SpawnWeightInput.text; 
+            
+        }
+
+        if (size2SpawnWeightInput != null) { 
+            
+            weight2 = size2SpawnWeightInput.text; 
+            
+        }
+
+        if (size3SpawnWeightInput != null) { 
+            
+            weight3 = size3SpawnWeightInput.text; 
+            
+        }
+
+        if (size4SpawnWeightInput != null) { 
+            
+            weight4 = size4SpawnWeightInput.text; 
+            
+        }
+
+        int.TryParse(weight1, out newWeights[0]);
+        int.TryParse(weight2, out newWeights[1]);
+        int.TryParse(weight3, out newWeights[2]);
+        int.TryParse(weight4, out newWeights[3]);
+
+        biomeGenerator.groupSizeWeights = newWeights;
+
+        bool enemyWeightsModified = false;
+        
+        foreach (var ew in individualEnemyWeights) {
+
+            if (ew.enemyTile != null) {
+
+                if (ew.weightInput != null) {
+
+                    if (int.TryParse(ew.weightInput.text, out int parsedWeight)) {
+
+                        ew.enemyTile.spawnWeight = parsedWeight;
+
+                        enemyWeightsModified = true;
+
+                    }
+
+                }
+
+            }
+
+        }
+        
+        if (enemyWeightsModified) {
+
+            biomeGenerator.recalculateAllBiomeEnemyWeights();
+
+        }
+
+        if (enableEntitiesToggle != null) { 
+            
+            biomeGenerator.enableEntities = enableEntitiesToggle.isOn; 
+            
+        }
+        
+        if (minSeparationInput != null) {
+
+            if (int.TryParse(minSeparationInput.text, out int minSep)) {
+
+                biomeGenerator.minEntitySeparation = minSep;
+
+            }
+
+        }
+
+        if (minSameSeparationInput != null) {
+
+            if (int.TryParse(minSameSeparationInput.text, out int minSameSep)) {
+
+                biomeGenerator.minSameEntitySeparation = minSameSep;
+
+            }
+
+        }
+
+        if (traderSpacingInput != null) {
+
+            if (int.TryParse(traderSpacingInput.text, out int traderSp)) {
+
+                biomeGenerator.merchantSpacing = traderSp;
+
+            }
+
+        }
+
+        if (goblinSpacingInput != null) {
+
+            if (int.TryParse(goblinSpacingInput.text, out int goblinSp)) {
+
+                biomeGenerator.goblinSpacing = goblinSp;
+
+            }
+
+        }
+
+        if (bonfireSpacingInput != null) {
+
+            if (int.TryParse(bonfireSpacingInput.text, out int bonfireSp)) {
+
+                biomeGenerator.bonfireSpacing = bonfireSp;
+
+            }
+
+        }
+
+        if (chestSpacingInput != null) {
+
+            if (int.TryParse(chestSpacingInput.text, out int chestSp)) {
+
+                biomeGenerator.chestSpacing = chestSp;
+
+            }
+
+        }
+
+        if (slimeSpacingInput != null) {
+
+            if (int.TryParse(slimeSpacingInput.text, out int slimeSp)) {
+
+                biomeGenerator.slimeSpacing = slimeSp;
+
+            }
+
+        }
+
+        if (mimicSpacingInput != null) {
+
+            if (int.TryParse(mimicSpacingInput.text, out int mimicSp)) {
+
+                biomeGenerator.mimicSpacing = mimicSp;
+
+            }
+
+        }
+
+        List<BiomeConfig> activeBiomes = new List<BiomeConfig>();
+
+        foreach (var masterBiome in masterBiomeList) {
+
+            var biomeUI = biomesUI.Find(b => b.targetBiomeName == masterBiome.name);
+
+            if (biomeUI != null) {
+
+                if (biomeUI.enablePuddles != null) { 
+                    
+                    masterBiome.enablePuddles = biomeUI.enablePuddles.isOn; 
+                    
+                }
+
+                if (biomeUI.puddleNoiseFrequency != null) { 
+                    
+                    masterBiome.puddleNoiseFrequency = biomeUI.puddleNoiseFrequency.value; 
+                    
+                }
+
+                if (biomeUI.puddleDensityThreshold != null) { 
+                    
+                    masterBiome.puddleDensityThreshold = biomeUI.puddleDensityThreshold.value; 
+                    
+                }
+
+                if (biomeUI.puddleScatterInfluence != null) { 
+                    
+                    masterBiome.puddleScatterInfluence = biomeUI.puddleScatterInfluence.value; 
+                    
+                }
+
+                if (biomeUI.enableObstacles != null) { 
+                    
+                    masterBiome.enableObstacles = biomeUI.enableObstacles.isOn; 
+                    
+                }
+
+                if (biomeUI.obstacleNoiseFrequency != null) { 
+                    
+                    masterBiome.obstacleNoiseFrequency = biomeUI.obstacleNoiseFrequency.value; 
+                    
+                }
+
+                if (biomeUI.obstacleDensityThreshold != null) { 
+                    
+                    masterBiome.obstacleDensityThreshold = biomeUI.obstacleDensityThreshold.value; 
+                    
+                }
+
+                if (biomeUI.obstacleScatterInfluence != null) { 
+                    
+                    masterBiome.obstacleScatterInfluence = biomeUI.obstacleScatterInfluence.value; 
+                    
+                }
+
+                if (biomeUI.enableEnemies != null) { 
+                    
+                    masterBiome.enableEnemies = biomeUI.enableEnemies.isOn; 
+                    
+                }
+
+                if (biomeUI.enemyGroupFrequency != null) { 
+                    
+                    masterBiome.enemyGroupFrequency = biomeUI.enemyGroupFrequency.value; 
+                    
+                }
+
+                bool isBiomeEnabled = true;
+                
+                if (biomeUI.enableBiomeToggle != null) {
+
+                    isBiomeEnabled = biomeUI.enableBiomeToggle.isOn;
+
+                }
+                
+                if (isBiomeEnabled) {
+
+                    activeBiomes.Add(masterBiome);
+
+                }
+
+            }
+
+            else {
+
+                activeBiomes.Add(masterBiome);
+
+            }
+
+        }
+
+        if (activeBiomes.Count == 0) {
+
+            if (masterBiomeList.Length > 0) {
+
+                activeBiomes.Add(masterBiomeList[0]);
+
+            }
+
+        }
+        
+        biomeGenerator.biomes = activeBiomes.ToArray();
+
+        if (loadingScreenPanel != null) {
+
+            loadingScreenPanel.SetActive(true);
+
+        }
+
+        if (loadingBarFill != null) {
+
+            loadingBarFill.fillAmount = 0f;
+
+        }
+
+        if (generateButton != null) {
+
+            generateButton.interactable = false;
+
+        }
+
+        if (loadingTextCoroutine != null) {
+
+            StopCoroutine(loadingTextCoroutine);
+
+        }
+
+        loadingTextCoroutine = StartCoroutine(animateLoadingText());
+
+        GridManager.Instance.initializeGrid(
+
+            onProgress: (progress) => {
+
+                if (loadingBarFill != null) {
+
+                    loadingBarFill.fillAmount = progress;
+
+                }
+
+            },
+
+            onComplete: () => {
+
+                if (loadingScreenPanel != null) {
+
+                    loadingScreenPanel.SetActive(false);
+
+                }
+
+                if (generateButton != null) {
+
+                    generateButton.interactable = true;
+
+                }
+
+                if (loadingTextCoroutine != null) {
+
+                    StopCoroutine(loadingTextCoroutine);
+
+                    loadingTextCoroutine = null;
+
+                }
+
+                updateStatsUI();
+
+                if (hasShownControls == false) {
+
+                    if (controlsPanel != null) {
+
+                        hasShownControls = true;
+
+                        isControlsActive = true;
+
+                        controlsPanel.SetActive(true);
+
+                        controlsCanvasGroup = controlsPanel.GetComponent<CanvasGroup>();
+                        
+                        if (controlsCanvasGroup == null) {
+
+                            controlsCanvasGroup = controlsPanel.AddComponent<CanvasGroup>();
+
+                        }
+
+                        if (pulseCoroutine != null) {
+
+                            StopCoroutine(pulseCoroutine);
+
+                        }
+
+                        pulseCoroutine = StartCoroutine(pulseControls());
+
+                    }
+                }
+            }
+        );
+
+    }
+
+    private IEnumerator animateLoadingText() {
+
+        if (loadingText == null) {
+
+            yield break;
+
+        }
+
+        string baseText = "Generating World";
+
+        int dotCount = 0;
+
+        while (true) {
+
+            loadingText.text = baseText + new string('.', dotCount);
+
+            dotCount = (dotCount + 1) % 4;
+
+            yield return new WaitForSeconds(dotAnimationSpeed);
+
+        }
+
+    }
+
+    // ============================================================
+    // Statistical Processing
+    // ============================================================
+
+    private void updateStatsUI() {
+
+        if (GridManager.Instance == null) {
+
+            return;
+
+        }
+
+        if (masterEnemyRow != null) {
+
+            masterEnemyRow.resetValues();
+
+        }
+        
+        if (masterEntityRow != null) {
+
+            masterEntityRow.resetValues();
+
+        }
+        
+        foreach (var row in enemiesStatRows) {
+
+            row.resetValues();
+
+        }
+        
+        foreach (var row in entitiesStatRows) {
+
+            row.resetValues();
+
+        }
+
+        int masterEnemiesTotal = 0;
+        int masterEnemiesMeadow = 0;
+        int masterEnemiesForest = 0;
+        int masterEnemiesMushroom = 0;
+        int masterEnemiesSwamp = 0;
+        int masterEnemiesRuins = 0;
+
+        foreach (var kvp in GridManager.Instance.enemyStats) {
+
+            string enemyName = kvp.Key;
+            var biomeCounts = kvp.Value;
+
+            int total = 0;
+            int meadow = 0;
+            int forest = 0;
+            int mushroom = 0;
+            int swamp = 0;
+            int ruins = 0;
+
+            foreach (var biomeData in biomeCounts) {
+
+                string bName = biomeData.Key.ToLower();
+                int count = biomeData.Value;
+                total = total + count;
+
+                if (bName.Contains("meadow")) {
+
+                    meadow = meadow + count;
+
+                }
+
+                else {
+
+                    if (bName.Contains("forest")) {
+
+                        if (bName.Contains("mushroom") == false) {
+
+                            forest = forest + count;
+
+                        }
+
+                    }
+
+                    else {
+
+                        if (bName.Contains("mushroom")) {
+
+                            mushroom = mushroom + count;
+
+                        }
+
+                        else {
+
+                            if (bName.Contains("swamp")) {
+
+                                swamp = swamp + count;
+
+                            }
+
+                            else {
+
+                                if (bName.Contains("ruin")) {
+
+                                    ruins = ruins + count;
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+            StatRowUI row = enemiesStatRows.Find(r =>
+
+                string.IsNullOrEmpty(r.targetTileName) == false && enemyName.ToLower().Contains(r.targetTileName.ToLower())
+
+            );
+
+            if (row != null) {
+
+                row.addValues(total, meadow, forest, mushroom, swamp, ruins);
+
+            }
+
+            masterEnemiesTotal = masterEnemiesTotal + total;
+            masterEnemiesMeadow = masterEnemiesMeadow + meadow;
+            masterEnemiesForest = masterEnemiesForest + forest;
+            masterEnemiesMushroom = masterEnemiesMushroom + mushroom;
+            masterEnemiesSwamp = masterEnemiesSwamp + swamp;
+            masterEnemiesRuins = masterEnemiesRuins + ruins;
+
+        }
+
+        if (masterEnemyRow != null) {
+
+            masterEnemyRow.setValues(masterEnemiesTotal, masterEnemiesMeadow, masterEnemiesForest, masterEnemiesMushroom, masterEnemiesSwamp, masterEnemiesRuins);
+
+        }
+
+        int masterEntitiesTotal = 0;
+        int masterEntitiesMeadow = 0;
+        int masterEntitiesForest = 0;
+        int masterEntitiesMushroom = 0;
+        int masterEntitiesSwamp = 0;
+        int masterEntitiesRuins = 0;
+
+        foreach (var kvp in GridManager.Instance.entityStats) {
+
+            string entityName = kvp.Key;
+
+            var biomeCounts = kvp.Value;
+
+            int total = 0;
+            int meadow = 0;
+            int forest = 0;
+            int mushroom = 0;
+            int swamp = 0;
+            int ruins = 0;
+
+            foreach (var biomeData in biomeCounts) {
+
+                string bName = biomeData.Key.ToLower();
+
+                int count = biomeData.Value;
+
+                total = total + count;
+
+                if (bName.Contains("meadow")) {
+
+                    meadow = meadow + count;
+
+                } 
+
+                else {
+
+                    if (bName.Contains("forest")) {
+
+                        if (bName.Contains("mushroom") == false) {
+
+                            forest = forest + count;
+
+                        }
+
+                    }
+
+                    else {
+
+                        if (bName.Contains("mushroom")) {
+
+                            mushroom = mushroom + count;
+
+                        }
+
+                        else {
+
+                            if (bName.Contains("swamp")) {
+
+                                swamp = swamp + count;
+
+                            } 
+
+                            else {
+
+                                if (bName.Contains("ruin")) {
+
+                                    ruins = ruins + count;
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+            StatRowUI row = entitiesStatRows.Find(r => string.IsNullOrEmpty(r.targetTileName) == false && entityName.ToLower().Contains(r.targetTileName.ToLower()));
+
+            if (row != null) {
+
+                row.addValues(total, meadow, forest, mushroom, swamp, ruins);
+
+            }
+
+            masterEntitiesTotal = masterEntitiesTotal + total;
+            masterEntitiesMeadow = masterEntitiesMeadow + meadow;
+            masterEntitiesForest = masterEntitiesForest + forest;
+            masterEntitiesMushroom = masterEntitiesMushroom + mushroom;
+            masterEntitiesSwamp = masterEntitiesSwamp + swamp;
+            masterEntitiesRuins = masterEntitiesRuins + ruins;
+
+        }
+
+        if (masterEntityRow != null) {
+
+            masterEntityRow.setValues(masterEntitiesTotal, masterEntitiesMeadow, masterEntitiesForest, masterEntitiesMushroom, masterEntitiesSwamp, masterEntitiesRuins);
+
+        }
+
+    }
+
+    private void exitApplication() {
+
+#if UNITY_EDITOR
+
+        UnityEditor.EditorApplication.isPlaying = false;
+
+#else
+
+        Application.Quit();
+
+#endif
+
+    }
+
+    // ============================================================
+    // Utility & Helper Classes
+    // ============================================================
+
+    public class HoverFadeElement : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
+
+        [HideInInspector] public float maxAlpha = 1f;
+        [HideInInspector] public float fadeSpeed = 5f;
+
+        private Image img;
+
+        private Coroutine fadeCoroutine;
+
+        private void Awake() {
+
+            img = GetComponent<Image>();
+            
+            if (img != null) {
+
+                Color startColor = img.color;
+
+                startColor.a = 0f;
+
+                img.color = startColor;
+
+            }
+
+        }
+
+        public void OnPointerEnter(PointerEventData eventData) {
+
+            if (img == null) {
+
+                return;
+
+            }
+            
+            if (fadeCoroutine != null) {
+
+                StopCoroutine(fadeCoroutine);
+
+            }
+            
+            fadeCoroutine = StartCoroutine(fadeAlpha(maxAlpha));
+
+        }
+
+        public void OnPointerExit(PointerEventData eventData) {
+
+            if (img == null) {
+
+                return;
+
+            }
+
+            if (fadeCoroutine != null) {
+
+                StopCoroutine(fadeCoroutine);
+
+            }
+
+            fadeCoroutine = StartCoroutine(fadeAlpha(0f));
+
+        }
+
+        private IEnumerator fadeAlpha(float targetAlpha) {
+
+            Color c = img.color;
+            
+            while (Mathf.Approximately(c.a, targetAlpha) == false) {
+
+                c.a = Mathf.MoveTowards(c.a, targetAlpha, Time.deltaTime * fadeSpeed);
+
+                img.color = c;
+
+                yield return null;
+
+            }
+            
+            c.a = targetAlpha;
+
+            img.color = c;
+
+        }
+
+    }
+
+    private List<TMP_InputField> getFieldsToFormat() {
+
+        List<TMP_InputField> fields = new List<TMP_InputField> {
+
+            biomeSizeInput, minGroupSeparationInput, size1SpawnWeightInput,
+            size2SpawnWeightInput, size3SpawnWeightInput, size4SpawnWeightInput,
+            minSeparationInput, minSameSeparationInput, traderSpacingInput,
+            goblinSpacingInput, bonfireSpacingInput, chestSpacingInput,
+            slimeSpacingInput, mimicSpacingInput
+
+        };
+
+        foreach (var ew in individualEnemyWeights) {
+
+            if (ew.weightInput != null) {
+
+                fields.Add(ew.weightInput);
+
+            }
+
+        }
+        
+        return fields;
+
+    }
+
+    private void setupInputFormattingEvents() {
+
+        foreach (var field in getFieldsToFormat()) {
+
+            if (field != null) {
+
+                field.onEndEdit.AddListener((text) => {
+
+                    formatInputText(field);
+
+                    triggerAutoGenerate();
+
+                });
+
+            }
+
+        }
+
+    }
+
+    private void refreshAllInputFormats() {
+
+        foreach (var field in getFieldsToFormat()) {
+
+            if (field != null) {
+
+                formatInputText(field);
+
+            }
+
+        }
+
+    }
+
+    private void formatInputText(TMP_InputField inputField) {
+
+        if (inputField == null) {
+
+            return;
+
+        }
+        
+        if (string.IsNullOrEmpty(inputField.text)) {
+
+            return;
+
+        }
+
+        if (inputField == biomeSizeInput) {
+
+            if (float.TryParse(inputField.text, out float floatResult)) {
+
+                inputField.text = floatResult.ToString("00.###");
+
+            }
+
+        }
+
+        else {
+
+            if (int.TryParse(inputField.text, out int intResult)) {
+
+                inputField.text = intResult.ToString("D2");
+
+            }
+
+        }
+
+    }
+
+}
