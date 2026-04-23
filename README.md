@@ -61,11 +61,13 @@ You can watch the tool in action here:
 
 - **Youtube:** [Procedural Generator Showcase] (Available soon)
 
-## Play in Browser
+## Download & Play
 
-You can try the tool directly from your browser using the WebGL build:
+You can try the tool directly on your computer by downloading the standalone executable build:
 
-- **GitHub Pages:** [Play Procedural Generator](https://your-username.github.io/your-repo-name/)
+- **Download Release:** [Download Procedural Generator App](https://drive.google.com/uc?export=download&id=1dmT8t50I6hGURDfnvUjexHOfPjOejIZM)
+
+*(Note: Extract the downloaded `.zip` file and run the `.exe` to launch the generator).*
 
 ## Author & Contact
 
