@@ -478,7 +478,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 setupImageButtonHover(btn);
 
             }
-
         }
 
         if (textHoverButtons != null) {
@@ -490,9 +489,7 @@ public class UIWorldGeneratorController : MonoBehaviour {
                     setupTextOnlyButtonHover(btn);
 
                 }
-
             }
-
         }
 
         setupFadeHoverImages();
@@ -512,13 +509,9 @@ public class UIWorldGeneratorController : MonoBehaviour {
                             Application.OpenURL(targetUrl);
 
                         });
-
                     }
-
                 }
-
             }
-
         }
 
         loadValuesToUI();
@@ -556,9 +549,7 @@ public class UIWorldGeneratorController : MonoBehaviour {
                     triggerAutoGenerate();
 
                 });
-
             }
-
         }
 
         if (lockSeedToggle != null) {
@@ -576,17 +567,13 @@ public class UIWorldGeneratorController : MonoBehaviour {
                                 seedInput.text = biomeGenerator.seed.ToString();
 
                             }
-
                         }
-
                     }
-
                 }
 
                 triggerAutoGenerate();
 
             });
-
         }
 
         generateWorld();
@@ -612,11 +599,8 @@ public class UIWorldGeneratorController : MonoBehaviour {
                     hideControlsPanel();
 
                 }
-
             }
-
         }
-
     }
 
     // ============================================================
@@ -636,7 +620,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
             generateWorld();
 
         }
-
     }
 
     private void setupAutoGenerateButton() {
@@ -702,7 +685,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 EventSystem.current.SetSelectedGameObject(null);
 
             }
-
         });
 
         EventTrigger.Entry entryEnter = new EventTrigger.Entry();
@@ -738,7 +720,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 btnText.color = originalTextColor;
 
             }
-
         });
 
         trigger.triggers.Add(entryExit);
@@ -838,11 +819,8 @@ public class UIWorldGeneratorController : MonoBehaviour {
                                     foundDynamicOccupant = true;
 
                                 }
-
                             }
-
                         }
-
                     }
 
                     if (foundDynamicOccupant == false) {
@@ -886,9 +864,7 @@ public class UIWorldGeneratorController : MonoBehaviour {
                                             typeName = "Ground";
 
                                         }
-
                                     }
-
                                 }
 
                                 else {
@@ -906,13 +882,9 @@ public class UIWorldGeneratorController : MonoBehaviour {
                                         typeName = "Ground";
 
                                     }
-
                                 }
-
                             }
-
                         }
-
                     }
 
                     hoverLegendText.text = className + " | " + typeName + " | " + biomeName + " | " + gridPos.x + "," + gridPos.y;
@@ -924,7 +896,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                     hoverLegendText.text = "";
 
                 }
-
             }
 
             else {
@@ -932,9 +903,7 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 hoverLegendText.text = "";
 
             }
-
         }
-
     }
 
     private bool isPointerOverUI() {
@@ -964,7 +933,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
             yield return null;
 
         }
-
     }
 
     private void hideControlsPanel() {
@@ -984,7 +952,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
             controlsPanel.SetActive(false);
 
         }
-
     }
 
     // ============================================================
@@ -1020,7 +987,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
             hoverElement.fadeSpeed = hoverFadeSpeed;
 
         }
-
     }
 
     private void startAlphaFade(Image img, float targetAlpha) {
@@ -1032,7 +998,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 StopCoroutine(activeAlphaFades[img]);
 
             }
-
         }
 
         activeAlphaFades[img] = StartCoroutine(fadeImageAlpha(img, targetAlpha));
@@ -1110,7 +1075,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 setHoverState();
 
             }
-
         });
 
         trigger.triggers.Add(entryEnter);
@@ -1200,7 +1164,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 setHoverState();
 
             }
-
         });
 
         trigger.triggers.Add(entryEnter);
@@ -1290,7 +1253,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 setHoverState();
 
             }
-
         });
 
         trigger.triggers.Add(entryEnter);
@@ -1443,7 +1405,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                         enemyGroupFrequency = config.enemyGroupFrequency
 
                     };
-
                 }
             }
         }
@@ -1470,7 +1431,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 isLocked = true;
 
             }
-
         }
 
         int currentSeed = biomeGenerator.seed;
@@ -1490,7 +1450,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 ew.enemyTile.restoreOriginalWeight();
 
             }
-
         }
 
         biomeGenerator.recalculateAllBiomeEnemyWeights();
@@ -1607,7 +1566,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
             linkSliderToText(biomeUI.enemyGroupFrequency, biomeUI.enemyGroupFrequencyText);
 
         }
-
     }
 
     private void linkSliderToText(Slider slider, TMP_Text textDisplay) {
@@ -1659,15 +1617,12 @@ public class UIWorldGeneratorController : MonoBehaviour {
                         initialSliderValue = slider.value;
 
                     }
-
                 });
 
                 trigger.triggers.Add(entryPointerUp);
 
             }
-
         }
-
     }
 
     private void setupAllToggleListeners() {
@@ -1711,9 +1666,7 @@ public class UIWorldGeneratorController : MonoBehaviour {
                                         activeCount = activeCount + 1;
 
                                     }
-
                                 }
-
                             }
 
                             if (activeCount == 0) {
@@ -1732,7 +1685,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                                 return;
 
                             }
-
                         }
 
                         handleBiomeSettingsContainer(biomeUI, isOn);
@@ -1740,9 +1692,7 @@ public class UIWorldGeneratorController : MonoBehaviour {
                         triggerAutoGenerate();
 
                     });
-
                 }
-
             }
 
             linkToggleToContainers(biomeUI.enablePuddles, biomeUI.puddlesContainer);
@@ -1750,7 +1700,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
             linkToggleToContainers(biomeUI.enableEnemies, biomeUI.enemiesContainer);
 
         }
-
     }
 
     private void setupSectionToggle(Toggle toggle, Button foldButton, GameObject container) {
@@ -1804,19 +1753,16 @@ public class UIWorldGeneratorController : MonoBehaviour {
                             StopCoroutine(activeRotations[btnRect]);
 
                         }
-
                     }
 
                     activeRotations[btnRect] = StartCoroutine(smoothRotateButton(btnRect, targetZ, 0.2f));
 
                 }
-
             }
 
             triggerAutoGenerate();
 
         });
-
     }
 
     private void handleBiomeSettingsContainer(BiomeUIElements biomeUI, bool isOn) {
@@ -1846,15 +1792,12 @@ public class UIWorldGeneratorController : MonoBehaviour {
                         StopCoroutine(activeRotations[btnRect]);
 
                     }
-
                 }
 
                 activeRotations[btnRect] = StartCoroutine(smoothRotateButton(btnRect, targetZ, 0.2f));
 
             }
-
         }
-
     }
 
     private void linkToggleToContainers(Toggle toggle, params GameObject[] containers) {
@@ -1884,7 +1827,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 container.SetActive(toggle.isOn);
 
             }
-
         }
 
         toggle.onValueChanged.AddListener((isOn) => {
@@ -1896,13 +1838,11 @@ public class UIWorldGeneratorController : MonoBehaviour {
                     container.SetActive(isOn);
 
                 }
-
             }
 
             triggerAutoGenerate();
 
         });
-
     }
 
     private void setupFoldButtons() {
@@ -1926,7 +1866,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
             linkFoldButton(biomeUI.foldBiomeButton, biomeUI.biomeSettingsContainer);
 
         }
-
     }
 
     private void linkFoldButton(Button button, GameObject container) {
@@ -1980,19 +1919,14 @@ public class UIWorldGeneratorController : MonoBehaviour {
                                 StopCoroutine(activeRotations[btnRect]);
 
                             }
-
                         }
 
                         activeRotations[btnRect] = StartCoroutine(smoothRotateButton(btnRect, targetZ, 0.2f));
 
                     }
-
                 });
-
             }
-
         }
-
     }
 
     private IEnumerator smoothRotateButton(RectTransform rect, float targetZ, float duration) {
@@ -2145,9 +2079,7 @@ public class UIWorldGeneratorController : MonoBehaviour {
                     size4SpawnWeightInput.text = biomeGenerator.groupSizeWeights[3].ToString(); 
                     
                 }
-
             }
-
         }
 
         foreach (var ew in individualEnemyWeights) {
@@ -2159,9 +2091,7 @@ public class UIWorldGeneratorController : MonoBehaviour {
                     ew.weightInput.text = ew.enemyTile.spawnWeight.ToString();
 
                 }
-
             }
-
         }
 
         if (enableEntitiesToggle != null) { 
@@ -2241,7 +2171,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                         biomeUI.foldBiomeButton.interactable = exists;
 
                     }
-
                 }
 
                 if (biomeUI.enablePuddles != null) { 
@@ -2303,9 +2232,7 @@ public class UIWorldGeneratorController : MonoBehaviour {
                     biomeUI.enemyGroupFrequency.value = config.enemyGroupFrequency; 
                     
                 }
-
             }
-
         }
 
         isUpdatingUI = wasUpdating;
@@ -2349,7 +2276,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                     seedInput.text = randomSeed.ToString();
 
                 }
-
             }
 
             else {
@@ -2361,11 +2287,8 @@ public class UIWorldGeneratorController : MonoBehaviour {
                         biomeGenerator.seed = parsedSeed;
 
                     }
-
                 }
-
             }
-
         }
 
         else {
@@ -2377,9 +2300,7 @@ public class UIWorldGeneratorController : MonoBehaviour {
                     biomeGenerator.seed = parsedSeed;
 
                 }
-
             }
-
         }
 
         biomeGenerator.clearFrameCache();
@@ -2392,7 +2313,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 biomeGenerator.approxBiomeSize = parsedSize;
 
             }
-
         }
 
         if (warpNoiseStrengthSlider != null) { 
@@ -2468,7 +2388,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 biomeGenerator.minGroupSeparation = minGroupSep;
 
             }
-
         }
 
         int[] newWeights = new int[4];
@@ -2524,11 +2443,8 @@ public class UIWorldGeneratorController : MonoBehaviour {
                         enemyWeightsModified = true;
 
                     }
-
                 }
-
             }
-
         }
         
         if (enemyWeightsModified) {
@@ -2550,7 +2466,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 biomeGenerator.minEntitySeparation = minSep;
 
             }
-
         }
 
         if (minSameSeparationInput != null) {
@@ -2560,7 +2475,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 biomeGenerator.minSameEntitySeparation = minSameSep;
 
             }
-
         }
 
         if (traderSpacingInput != null) {
@@ -2570,7 +2484,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 biomeGenerator.merchantSpacing = traderSp;
 
             }
-
         }
 
         if (goblinSpacingInput != null) {
@@ -2580,7 +2493,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 biomeGenerator.goblinSpacing = goblinSp;
 
             }
-
         }
 
         if (bonfireSpacingInput != null) {
@@ -2590,7 +2502,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 biomeGenerator.bonfireSpacing = bonfireSp;
 
             }
-
         }
 
         if (chestSpacingInput != null) {
@@ -2600,7 +2511,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 biomeGenerator.chestSpacing = chestSp;
 
             }
-
         }
 
         if (slimeSpacingInput != null) {
@@ -2610,7 +2520,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 biomeGenerator.slimeSpacing = slimeSp;
 
             }
-
         }
 
         if (mimicSpacingInput != null) {
@@ -2620,7 +2529,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 biomeGenerator.mimicSpacing = mimicSp;
 
             }
-
         }
 
         List<BiomeConfig> activeBiomes = new List<BiomeConfig>();
@@ -2704,7 +2612,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                     activeBiomes.Add(masterBiome);
 
                 }
-
             }
 
             else {
@@ -2712,7 +2619,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 activeBiomes.Add(masterBiome);
 
             }
-
         }
 
         if (activeBiomes.Count == 0) {
@@ -2722,7 +2628,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 activeBiomes.Add(masterBiomeList[0]);
 
             }
-
         }
         
         biomeGenerator.biomes = activeBiomes.ToArray();
@@ -2819,7 +2724,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 }
             }
         );
-
     }
 
     private IEnumerator animateLoadingText() {
@@ -2843,7 +2747,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
             yield return new WaitForSeconds(dotAnimationSpeed);
 
         }
-
     }
 
     // ============================================================
@@ -2948,15 +2851,10 @@ public class UIWorldGeneratorController : MonoBehaviour {
                                     ruins = ruins + count;
 
                                 }
-
                             }
-
                         }
-
                     }
-
                 }
-
             }
 
             StatRowUI row = enemiesStatRows.Find(r =>
@@ -3029,7 +2927,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                             forest = forest + count;
 
                         }
-
                     }
 
                     else {
@@ -3055,15 +2952,10 @@ public class UIWorldGeneratorController : MonoBehaviour {
                                     ruins = ruins + count;
 
                                 }
-
                             }
-
                         }
-
                     }
-
                 }
-
             }
 
             StatRowUI row = entitiesStatRows.Find(r => string.IsNullOrEmpty(r.targetTileName) == false && entityName.ToLower().Contains(r.targetTileName.ToLower()));
@@ -3131,7 +3023,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 img.color = startColor;
 
             }
-
         }
 
         public void OnPointerEnter(PointerEventData eventData) {
@@ -3189,7 +3080,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
             img.color = c;
 
         }
-
     }
 
     private List<TMP_InputField> getFieldsToFormat() {
@@ -3211,7 +3101,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 fields.Add(ew.weightInput);
 
             }
-
         }
         
         return fields;
@@ -3231,11 +3120,8 @@ public class UIWorldGeneratorController : MonoBehaviour {
                     triggerAutoGenerate();
 
                 });
-
             }
-
         }
-
     }
 
     private void refreshAllInputFormats() {
@@ -3247,9 +3133,7 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 formatInputText(field);
 
             }
-
         }
-
     }
 
     private void formatInputText(TMP_InputField inputField) {
@@ -3283,9 +3167,6 @@ public class UIWorldGeneratorController : MonoBehaviour {
                 inputField.text = intResult.ToString("D2");
 
             }
-
         }
-
     }
-
 }
