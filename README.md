@@ -61,7 +61,7 @@ You can watch the tool in action here:
 
 - **Youtube:** [Procedural Generator Showcase] (Available soon)
 
-## Download & Play
+## Download & Try
 
 You can try the tool directly on your computer by downloading the standalone executable build:
 
