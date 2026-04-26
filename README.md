@@ -56,7 +56,7 @@ The following screenshots display the procedural generator in action:
 
 <p align="center">
   <img src="GIF/GIF1.gif" alt="Demostración del Generador" width="49%" />
-  <img src="GIF/GIF1.gif" alt="Demostración del Generador" width="49%" />
+  <img src="GIF/GIF2.gif" alt="Demostración del Generador" width="49%" />
 </p>
 
 You can watch the tool in action here:
