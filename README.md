@@ -14,7 +14,7 @@ While the main system resides in Project IV, this repository provides a **real-t
 
 While the application allows for the deep customization of a vast array of generation parameters in real-time, it is important to note that it remains fundamentally tied to the external project it was built for. 
 
-Because it inherits **Project IV's** unique rules—such as being strictly grid-based and featuring exactly 5 specific biomes—**the app does not allow for adding or fundamentally altering the base types of biomes, enemies, entities, or generated objects.** The tool is designed to tweak and visualize *how* these predefined elements are generated and distributed, rather than creating entirely new ones from scratch.
+Because it inherits **Project IV's** unique rules—such as being strictly grid-based and featuring exactly 5 specific biomes **the app does not allow for adding or fundamentally altering the base types of biomes, enemies, entities, or generated objects.** The tool is designed to tweak and visualize *how* these predefined elements are generated and distributed, rather than creating entirely new ones from scratch.
 
 ## ⚠️ Important Disclaimer: No Source Code Included
 
