@@ -62,4 +62,23 @@ You can watch the tool in action here:
 
 You can try the tool directly on your computer by downloading the standalone executable build:
 
-- **Download Release:** [Download Procedural Generator App](
+- **Download Release:** [Download Procedural Generator App](https://drive.google.com/uc?export=download&id=1dmT8t50I6hGURDfnvUjexHOfPjOejIZM)
+
+*(Note: Extract the downloaded `.zip` file and run the `.exe` to launch the generator).*
+
+## Author & Contact
+
+**Author:** Víctor Rosell Gascó
+
+- **Gmail:** codeby.vrosell@gmail.com  
+- **Portfolio:** [codebyvrosell.com](https://codebyvrosell.com)   
+- **Twitter:** [@codeby_vrosell](https://x.com/codeby_vrosell)  
+- **GitHub:** [@codeby-vrosell](https://github.com/codeby-vrosell)  
+- **LinkedIn:** [in/v-rosell](https://linkedin.com/in/v-rosell)
+
+## License
+
+This repository and its contents are provided under a strict private license.                                    
+**Its use, copying, modification, reverse engineering, or distribution is not allowed** under any circumstances without explicit written permission from the author.
+
+All rights reserved.
