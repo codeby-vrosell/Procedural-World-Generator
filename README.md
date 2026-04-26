@@ -54,6 +54,11 @@ The following screenshots display the procedural generator in action:
   <img src="IMG/IMG3.png" alt="Generator Screenshot 3" width="30%"/>
 </p>
 
+<p align="center">
+  <img src="GIF/GIF1.gif.gif" alt="Demostración del Generador" width="50%" />
+  <img src="GIF/GIF1.gif.gif" alt="Demostración del Generador" width="50%" />
+</p>
+
 You can watch the tool in action here:
 
 - **Youtube:** [Procedural Generator Showcase] (Available soon)
