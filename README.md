@@ -6,46 +6,43 @@
 
 ## Project Overview
 
-This repository contains the custom C# scripts developed for the **Procedural Generator**. This world generator is an integral part of **Project IV**, a tactical roguelike that is part of a larger overarching project. 
+This repository serves as a showcase for the **Procedural Generator**. This world generator is an integral part of **Project IV**, a tactical roguelike currently in active development. 
 
-While the main system resides in Project IV, this repository focuses specifically on a **real-time application** of the generator, allowing for the isolated and optimized visualization and dynamic adjustment of biomes, entities, and terrain parameters.
+While the main system resides in Project IV, this repository provides a **real-time standalone application** of the generator. It allows for the isolated and optimized visualization and dynamic adjustment of biomes, entities, and terrain parameters.
 
 ## Scope & Limitations
 
 While the application allows for the deep customization of a vast array of generation parameters in real-time, it is important to note that it remains fundamentally tied to the external project it was built for. 
 
-Because it inherits **Project IV's** unique rules such as being strictly grid-based and featuring exactly 5 specific biomes **the app does not allow for adding or fundamentally altering the base types of biomes, enemies, entities, or generated objects.** The tool is designed to tweak and visualize *how* these predefined elements are generated and distributed, rather than creating entirely new ones from scratch.
+Because it inherits **Project IV's** unique rules—such as being strictly grid-based and featuring exactly 5 specific biomes—**the app does not allow for adding or fundamentally altering the base types of biomes, enemies, entities, or generated objects.** The tool is designed to tweak and visualize *how* these predefined elements are generated and distributed, rather than creating entirely new ones from scratch.
 
-## Important Disclaimer
+## ⚠️ Important Disclaimer: No Source Code Included
 
-This repository does **NOT** contain the complete Unity project.  
-Assets, 3D models, prefabs, UI graphics, and scenes are **not included**. Only the core logic scripts developed by the author are provided.
+Because **Project IV is currently in active development with a potential future commercial release on Steam**, the source code must remain confidential. 
 
-**Note:** Scripts for specific gameplay mechanics or external plugins are not included, as they fall outside the scope of this repository, which focuses strictly on the procedural generation architecture.
+Therefore, this repository does **NOT** contain any scripts, assets, 3D models, prefabs, UI graphics, or Unity project files. It is strictly dedicated to hosting the **standalone executable build** so users can interact with, visualize, and test the procedural generation logic in real-time.
 
-## Scripts Organization
+## System Architecture (Under the Hood)
 
-The scripts are grouped by their core functionality within the generator:
+Although the scripts are not public, the generator is powered by several custom core modules designed by the author:
 
-- [**BiomeGenerator.cs**](/Scripts/BiomeGenerator.cs): The core procedural engine. Handles Perlin noise evaluation, chunk-based seed management, world warping, and the distribution logic for water, obstacles, enemies, and entities.
-- [**GridManager.cs**](/Scripts/GridManager.cs): Manages the physical grid instantiation. Handles multi-tile object placement, rotation constraints, cell reservation, coordinate mapping, and tracks generation statistics.
-- [**CameraControl.cs**](/Scripts/CameraControl.cs): Provides an RTS-style camera system. Features zoom and panning mechanics, dynamic boundaries based on the zoom level, and custom cursor management.
-- [**UIWorldGeneratorController.cs**](/Scripts/UIWorldGeneratorController.cs): The bridge between the user and the procedural engine. Controls real-time UI binding, auto-generation toggles, statistics tables, hover legends, and UI visual transitions.
+- **Biome Generator:** The core procedural engine. Handles Perlin noise evaluation, chunk-based seed management, world warping, and the distribution logic for water, obstacles, enemies, and entities.
+- **Grid Manager:** Manages the physical grid instantiation. Handles multi-tile object placement, rotation constraints, cell reservation, coordinate mapping, and tracks generation statistics.
+- **Camera Control:** Provides an RTS-style camera system. Features zoom and panning mechanics, dynamic boundaries based on the zoom level, and custom cursor management.
+- **UI Controller:** The bridge between the user and the procedural engine. Controls real-time UI binding, auto-generation toggles, statistics tables, hover legends, and UI visual transitions.
 
-## How to Use
+## How to Use the App
 
-1. Add the scripts to your Unity project under the `Assets/Scripts/` path.  
-2. Ensure you have the required packages installed (such as `TextMeshPro` for the UI and `Unity.Cinemachine` for the camera).
-3. Assign the required references (`Camera`, `TMP_Text`, `Sliders`, etc.) in the Inspector for the UI and Manager scripts.  
-4. Configure the public generation settings (noise frequencies, biome sizes, spawn weights).  
-5. Define your own TileTypes and BiomeConfigs to feed the generator's exposed arrays.
+1. Download the standalone build from the **Download & Try** section below.  
+2. Extract the downloaded `.zip` file to your preferred location on your computer.
+3. Run the executable file (`.exe`) to launch the generator.  
+4. Use the in-app UI panels to configure generation settings (noise frequencies, biome sizes, spawn weights) and watch the map update in real-time.
+5. Use the mouse to pan the camera and the scroll wheel to zoom in and out of the generated map.
 
-## Notes & Recommendations
+## Technical Highlights
 
-- Some scripts assume specific UI hierarchies and components (such as `CanvasGroup` or `EventSystems` for hover detection).  
-- `CameraControl.cs` requires the Cinemachine package (`Unity.Cinemachine`) to function properly.
-- The scripts have been designed with performance in mind (using coroutines for grid building and cache dictionaries for noise evaluation).
-- This repository focuses strictly on the procedural programming architecture and does not include graphical assets or scriptable objects.
+- The systems have been designed with heavy performance optimization in mind, utilizing Unity coroutines for grid building and cache dictionaries for noise evaluation to ensure smooth real-time generation.
+- The RTS camera system is built on top of `Unity.Cinemachine` for smooth, bounded navigation.
   
 ## Watch Procedural Generator
 
@@ -65,23 +62,4 @@ You can watch the tool in action here:
 
 You can try the tool directly on your computer by downloading the standalone executable build:
 
-- **Download Release:** [Download Procedural Generator App](https://drive.google.com/uc?export=download&id=1dmT8t50I6hGURDfnvUjexHOfPjOejIZM)
-
-*(Note: Extract the downloaded `.zip` file and run the `.exe` to launch the generator).*
-
-## Author & Contact
-
-**Author:** Víctor Rosell Gascó
-
-- **Gmail:** codeby.vrosell@gmail.com  
-- **Portfolio:** [codebyvrosell.com](https://codebyvrosell.com)   
-- **Twitter:** [@codeby_vrosell](https://x.com/codeby_vrosell)  
-- **GitHub:** [@codeby-vrosell](https://github.com/codeby-vrosell)  
-- **LinkedIn:** [in/v-rosell](https://linkedin.com/in/v-rosell)
-
-## License
-
-This repository is provided under a strict private license with all rights reserved.                                    
-**Its use, copying, modification, or distribution is not allowed** under any circumstances without explicit written permission from the author.
-
-All rights reserved.
+- **Download Release:** [Download Procedural Generator App](
