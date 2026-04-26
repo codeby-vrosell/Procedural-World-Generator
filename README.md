@@ -67,7 +67,7 @@ You can watch the tool in action here:
 
 You can try the tool directly on your computer by downloading the standalone executable build:
 
-- **Download Release:** [Download Procedural Generator App](https://drive.google.com/uc?export=download&id=1dmT8t50I6hGURDfnvUjexHOfPjOejIZM)
+- **Download Release:** [Download Procedural Generator App](https://drive.google.com/uc?export=download&id=11DvVnyAyrc-lzPi5fJjojpozjkLbct0w)
 
 *(Note: Extract the downloaded `.zip` file and run the `.exe` to launch the generator).*
 
