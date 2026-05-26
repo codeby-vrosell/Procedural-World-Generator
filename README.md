@@ -49,7 +49,7 @@ Although the scripts are not public, the generator is powered by several custom 
 The following screenshots display the procedural generator in action:
 
 <p align="center">
-  <img src="IMG/IMG1.png" alt="Generator Screenshot 1" width="30%"/>
+  <img src="IMG/IMG1.png" alt="Generator Screenshot 1" width="30%"/> 
   <img src="IMG/IMG2.png" alt="Generator Screenshot 2" width="30%"/>
   <img src="IMG/IMG3.png" alt="Generator Screenshot 3" width="30%"/>
 </p>
