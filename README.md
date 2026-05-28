@@ -61,7 +61,7 @@ The following screenshots display the procedural generator in action:
 
 You can watch the tool in action here:
 
-- **Youtube:** [Procedural Generator Showcase] (Available soon)
+- **Youtube:** [Procedural Generator Showcase](https://youtu.be/4pcEt98szyQ)
 
 ## Download & Try
 
